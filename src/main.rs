@@ -1,6 +1,6 @@
 extern crate crossterm;
 
-use rand::seq::SliceRandom;
+use std::borrow::BorrowMut;
 use std::io::{stdout, Write};
 use std::{env, thread, time};
 
@@ -10,11 +10,10 @@ use crossterm::{
     terminal::size,
     Result,
 };
-
+use rand::seq::SliceRandom;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use crate::LifeState::{Alive, Dead};
-use std::borrow::BorrowMut;
 
 fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -203,7 +202,7 @@ fn get_top_left(position: usize, board: &Board) -> Option<usize> {
 
 fn get_top(position: usize, board: &Board) -> Option<usize> {
     if position < board.width {
-        return None;
+        return Some(position + (board.width * (board.height - 1)));
     }
 
     Some(position - board.width)
@@ -218,11 +217,11 @@ fn get_top_right(position: usize, board: &Board) -> Option<usize> {
 
 fn get_left(position: usize, board: &Board) -> Option<usize> {
     if position < 1 {
-        return None;
+        return Some(position + (board.width - 1));
     }
 
     if (position + 1) % board.width == 1 {
-        return None;
+        return Some(position + (board.width - 1));
     }
 
     Some(position - 1)
@@ -230,11 +229,11 @@ fn get_left(position: usize, board: &Board) -> Option<usize> {
 
 fn get_right(position: usize, board: &Board) -> Option<usize> {
     if position + 1 >= board.width * board.height {
-        return None;
+        return Some((position + 1) - board.width);
     }
 
     if (position + 1) % board.width == 0 {
-        return None;
+        return Some((position + 1) - board.width);
     }
 
     Some(position + 1)
@@ -249,7 +248,7 @@ fn get_bottom_left(position: usize, board: &Board) -> Option<usize> {
 
 fn get_bottom(position: usize, board: &Board) -> Option<usize> {
     if position + board.width >= board.width * board.height {
-        return None;
+        return Some(position - ((board.height - 1) * board.width));
     }
 
     Some(position + board.width)
@@ -382,34 +381,82 @@ mod tests {
     }
 
     #[test]
-    fn when_a_cell_is_off_map_it_is_dead() {
+    fn when_a_cell_is_off_map_it_is_loops_round() {
         let board = Board {
             cells: vec![
-                Dead, Dead, Dead, Dead, Dead, Alive, Alive, Dead, Dead, Alive, Alive, Dead, Dead,
-                Dead, Dead, Dead,
+                Alive, Dead, Alive, Dead, Dead, Alive, Dead, Alive, Alive, Dead, Alive, Dead, Dead,
+                Alive, Dead, Alive,
             ],
             height: 4,
             width: 4,
         };
 
         assert_eq!(
-            (Dead, Dead, Dead, Dead, Dead, Dead, Dead, Alive),
+            (Alive, Dead, Alive, Dead, Dead, Alive, Dead, Alive),
             neighbours(0, board.clone())
         );
 
         assert_eq!(
-            (Dead, Dead, Dead, Dead, Alive, Dead, Dead, Alive),
+            (Dead, Alive, Dead, Alive, Alive, Dead, Alive, Dead),
             neighbours(4, board.clone())
+        );
+        assert_eq!(
+            (Alive, Dead, Alive, Dead, Dead, Alive, Dead, Alive),
+            neighbours(8, board.clone())
         );
 
         assert_eq!(
-            (Dead, Dead, Alive, Dead, Alive, Dead, Dead, Dead),
-            neighbours(8, board.clone())
-        );
-        assert_eq!(
-            (Dead, Dead, Alive, Dead, Dead, Dead, Dead, Dead),
+            (Dead, Alive, Dead, Alive, Alive, Dead, Alive, Dead),
             neighbours(12, board)
         );
+    }
+
+    #[test]
+    fn test_get_bottom() {
+        let board = Board {
+            cells: vec![Dead, Dead, Alive, Dead, Alive, Dead],
+            height: 3,
+            width: 2,
+        };
+        assert_eq!(Some(0), get_bottom(4, &board));
+        assert_eq!(Some(2), get_bottom(0, &board));
+        assert_eq!(Some(4), get_bottom(2, &board));
+    }
+
+    #[test]
+    fn test_get_top() {
+        let board = Board {
+            cells: vec![Dead, Alive, Alive],
+            height: 3,
+            width: 1,
+        };
+        assert_eq!(Some(0), get_top(1, &board));
+        assert_eq!(Some(1), get_top(2, &board));
+        assert_eq!(Some(2), get_top(0, &board));
+    }
+
+    #[test]
+    fn test_get_left() {
+        let board = Board {
+            cells: vec![Dead, Alive, Alive],
+            height: 1,
+            width: 3,
+        };
+        assert_eq!(Some(0), get_left(1, &board));
+        assert_eq!(Some(1), get_left(2, &board));
+        assert_eq!(Some(2), get_left(0, &board));
+    }
+
+    #[test]
+    fn test_get_right() {
+        let board = Board {
+            cells: vec![Dead, Alive, Alive],
+            height: 1,
+            width: 3,
+        };
+        assert_eq!(Some(0), get_right(2, &board));
+        assert_eq!(Some(1), get_right(0, &board));
+        assert_eq!(Some(2), get_right(1, &board));
     }
 
     #[test]
