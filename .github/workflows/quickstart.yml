@@ -5,6 +5,12 @@ name: Quickstart
 
 jobs:
   check:
+    strategy:
+      matrix:
+        targets:
+          - x86_64-unknown-linux-musl
+          - x86_64-apple-darwin
+          - x86_64-unknown-linux-musl
     name: Check
     runs-on: ubuntu-latest
     steps:
@@ -20,13 +26,19 @@ jobs:
 
       - name: Run cargo check
         uses: actions-rs/cargo@v1
-        continue-on-error: true  # WARNING: only for this example, remove it!
         with:
+          use-cross: true
           command: check
-
+          args: --target ${{ matrix.targets }}
   test:
     name: Test Suite
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        targets:
+          - x86_64-unknown-linux-musl
+          - x86_64-apple-darwin
+          - x86_64-unknown-linux-musl
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
@@ -41,8 +53,9 @@ jobs:
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
+          use-cross: true
           command: test
-
+          args: --target ${{ matrix.targets }}
   lints:
     name: Lints
     runs-on: ubuntu-latest
@@ -61,11 +74,13 @@ jobs:
       - name: Run cargo fmt
         uses: actions-rs/cargo@v1
         with:
+          use-cross: true
           command: fmt
           args: --all -- --check
 
       - name: Run cargo clippy
         uses: actions-rs/cargo@v1
         with:
+          use-cross: true
           command: clippy
           args: -- -D warnings
