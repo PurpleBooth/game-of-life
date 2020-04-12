@@ -1,14 +1,18 @@
-use rand::{rngs::StdRng, Rng, SeedableRng};
+extern crate crossterm;
+
 use std::io::{stdout, Write};
 use std::{env, thread, time};
 
 use crossterm::{
     cursor, queue,
     style::{Color, Print, ResetColor, SetBackgroundColor, SetForegroundColor},
+    terminal::size,
     Result,
 };
+use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use crate::LifeState::{Alive, Dead};
+
 fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
 
@@ -22,15 +26,14 @@ fn main() -> Result<()> {
 
     let mut cells: Vec<LifeState> = vec![];
 
-    let height = 25;
-    let width = 80;
-    for _ in 0..(height * width) {
+    let size = size()?;
+    for _ in 0..(size.0 * size.1) {
         cells.push(if rng.gen::<bool>() { Alive } else { Dead })
     }
 
     let mut current_state = Board {
-        height,
-        width,
+        height: size.1 as usize,
+        width: size.0 as usize,
         cells,
     };
 
@@ -65,21 +68,20 @@ fn draw_board(board: Board) -> Result<()> {
         match board.cells[position] {
             Alive => queue!(
                 stdout(),
-                SetForegroundColor(Color::Black),
-                SetBackgroundColor(Color::Magenta),
-                Print(" "),
-                ResetColor
+                SetForegroundColor(Color::Magenta),
+                SetBackgroundColor(Color::Black),
+                Print("█"),
             )?,
             Dead => queue!(
                 stdout(),
                 SetForegroundColor(Color::Black),
                 SetBackgroundColor(Color::Black),
                 Print(" "),
-                ResetColor
             )?,
         }
     }
 
+    queue!(stdout(), ResetColor,)?;
     stdout().flush()?;
     Ok(())
 }
