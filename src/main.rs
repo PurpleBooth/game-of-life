@@ -1,5 +1,6 @@
 extern crate crossterm;
 
+use rand::seq::SliceRandom;
 use std::io::{stdout, Write};
 use std::{env, thread, time};
 
@@ -9,9 +10,11 @@ use crossterm::{
     terminal::size,
     Result,
 };
+
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use crate::LifeState::{Alive, Dead};
+use std::borrow::BorrowMut;
 
 fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -27,12 +30,12 @@ fn main() -> Result<()> {
     let mut cells: Vec<LifeState> = vec![];
 
     let size = size()?;
-    for _ in 0..(size.0 * size.1) {
+    for _ in 0..(size.0 * (size.1 - 1)) {
         cells.push(if rng.gen::<bool>() { Alive } else { Dead })
     }
 
     let mut current_state = Board {
-        height: size.1 as usize,
+        height: size.1 as usize - 1,
         width: size.0 as usize,
         cells,
     };
@@ -45,14 +48,14 @@ fn main() -> Result<()> {
     }
 
     loop {
-        draw_board(current_state.clone())?;
+        draw_board(current_state.clone(), rng.borrow_mut())?;
         current_state = next_board_state(current_state.clone());
         let ten_millis = time::Duration::from_millis(500);
         thread::sleep(ten_millis);
     }
 }
 
-fn draw_board(board: Board) -> Result<()> {
+fn draw_board(board: Board, rng: &mut StdRng) -> Result<()> {
     queue!(
         stdout(),
         cursor::MoveUp(board.height as u16),
@@ -65,11 +68,26 @@ fn draw_board(board: Board) -> Result<()> {
             queue!(stdout(), Print("\n"),)?
         }
 
+        let colours = vec![
+            Color::DarkGrey,
+            Color::DarkRed,
+            Color::Green,
+            Color::DarkGreen,
+            Color::DarkYellow,
+            Color::Blue,
+            Color::DarkBlue,
+            Color::Magenta,
+            Color::DarkMagenta,
+            Color::Cyan,
+            Color::DarkCyan,
+            Color::Grey,
+        ];
+
         match board.cells[position] {
             Alive => queue!(
                 stdout(),
-                SetForegroundColor(Color::Magenta),
                 SetBackgroundColor(Color::Black),
+                SetForegroundColor(*colours.choose(rng).unwrap()),
                 Print("█"),
             )?,
             Dead => queue!(
