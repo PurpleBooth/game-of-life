@@ -388,7 +388,7 @@ mod tests {
         );
         assert_eq!(
             (Dead, Dead, Alive, Dead, Dead, Dead, Dead, Dead),
-            neighbours(12, board.clone())
+            neighbours(12, board)
         );
     }
 
@@ -456,7 +456,7 @@ mod tests {
                 Dead,  // Bottom
                 Dead   // Bottom Right
             ),
-            neighbours(10, board.clone()),
+            neighbours(10, board),
             "Middle Bottom Right"
         );
     }
