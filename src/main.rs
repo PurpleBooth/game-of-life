@@ -29,12 +29,12 @@ fn main() -> Result<()> {
     let mut cells: Vec<LifeState> = vec![];
 
     let size = size()?;
-    for _ in 0..(size.0 * (size.1 - 1)) {
+    for _ in 0..(size.0 * (size.1)) {
         cells.push(if rng.gen::<bool>() { Alive } else { Dead })
     }
 
     let mut current_state = Board {
-        height: size.1 as usize - 1,
+        height: size.1 as usize,
         width: size.0 as usize,
         cells,
     };
@@ -63,10 +63,6 @@ fn draw_board(board: Board, rng: &mut StdRng) -> Result<()> {
 
     let cells_in_board = board.cells.len();
     for position in 0..cells_in_board {
-        if position % board.width == 0 {
-            queue!(stdout(), Print("\n"),)?
-        }
-
         let colours = vec![
             Color::DarkGrey,
             Color::DarkRed,
@@ -95,6 +91,11 @@ fn draw_board(board: Board, rng: &mut StdRng) -> Result<()> {
                 SetBackgroundColor(Color::Black),
                 Print(" "),
             )?,
+        }
+
+        if position + 1 != board.width * board.height && position % board.width == (board.width - 1)
+        {
+            queue!(stdout(), Print("\n"),)?
         }
     }
 
