@@ -345,6 +345,10 @@ mod tests {
         assert_eq!(
             LifeState::Dead,
             next_cell_state(Alive, (Alive, Dead, Dead, Dead, Dead, Dead, Dead, Dead))
+        );
+        assert_eq!(
+            LifeState::Dead,
+            next_cell_state(Dead, (Alive, Dead, Dead, Dead, Dead, Dead, Dead, Dead))
         )
     }
 
@@ -357,6 +361,10 @@ mod tests {
         assert_eq!(
             LifeState::Alive,
             next_cell_state(Alive, (Alive, Alive, Dead, Dead, Dead, Dead, Dead, Dead))
+        );
+        assert_eq!(
+            LifeState::Dead,
+            next_cell_state(Dead, (Alive, Alive, Dead, Dead, Dead, Dead, Dead, Dead))
         )
     }
 
@@ -370,6 +378,10 @@ mod tests {
             LifeState::Dead,
             next_cell_state(Alive, (Alive, Alive, Alive, Alive, Alive, Dead, Dead, Dead))
         );
+        assert_eq!(
+            LifeState::Dead,
+            next_cell_state(Dead, (Alive, Alive, Alive, Alive, Alive, Dead, Dead, Dead))
+        );
     }
 
     #[test]
@@ -378,6 +390,10 @@ mod tests {
         assert_eq!(
             LifeState::Alive,
             next_cell_state(Dead, (Alive, Alive, Alive, Dead, Dead, Dead, Dead, Dead))
+        );
+        assert_eq!(
+            LifeState::Alive,
+            next_cell_state(Alive, (Alive, Alive, Alive, Dead, Dead, Dead, Dead, Dead))
         );
     }
 
