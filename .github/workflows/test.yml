@@ -1,10 +1,8 @@
 
 on: [push, pull_request]
 
-name: Test
 jobs:
   check:
-    name: Check
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -24,7 +22,6 @@ jobs:
           command: check
 
   test:
-    name: Test Suite
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -60,7 +57,6 @@ jobs:
           args: -- -h
 
   lints:
-    name: Lints
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
