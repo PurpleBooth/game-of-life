@@ -25,6 +25,8 @@ fn main() -> Result<()> {
             Arg::with_name("seed")
                 .help("(Optional) Provide this to rerun a previous configuration")
                 .index(1)
+                .conflicts_with("version")
+                .conflicts_with("help")
                 .required(false),
         )
         .get_matches();
