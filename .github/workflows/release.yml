@@ -1,0 +1,165 @@
+on:
+  push:
+    tags:
+      - "*"
+
+name: Release
+jobs:
+  check:
+    name: Check
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+          - os: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: check
+
+  test:
+    name: Test Suite
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            deps: brew update && brew install zsh
+          - os: ubuntu-latest
+            deps: sudo apt-get update && sudo apt-get install zsh
+    steps:
+      - uses: actions/checkout@v2
+      - run: ${{ matrix.deps }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: run
+
+  lints:
+    name: Lints
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+          - os: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: -- -D warnings
+
+  build:
+    needs: [lints, test, check]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            deps: brew update && brew install zsh
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            deps: sudo apt-get update && sudo apt-get install zsh
+    steps:
+      - uses: actions/checkout@master
+        with:
+          lfs: true
+      - id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      - run: ${{ matrix.deps }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        env:
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
+        with:
+          command: build
+          args: --release
+      - uses: actions/upload-artifact@master
+        with:
+          name: game-of-life-${{ matrix.target }}
+          path: ./target/release/game-of-life
+  release:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      - uses: actions/download-artifact@master
+        with:
+          name: game-of-life-x86_64-unknown-linux-gnu
+      - uses: actions/download-artifact@master
+        with:
+          name: game-of-life-x86_64-apple-darwin
+      - id: create_release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          release_name: Release ${{ steps.get_version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+      - uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./game-of-life-x86_64-unknown-linux-gnu/game-of-life
+          asset_name: game-of-life-x86_64-unknown-linux-gnu
+          asset_content_type: application/octet-stream
+      - uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./game-of-life-x86_64-apple-darwin/game-of-life
+          asset_name: game-of-life-x86_64-apple-darwin
+          asset_content_type: application/octet-stream
+  update-tap:
+    needs: [release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mislav/bump-homebrew-formula-action@v1.4
+        if: "!contains(github.ref, '-')" # skip prereleases
+        with:
+          formula-name: game-of-life
+          homebrew-tap: PurpleBooth/homebrew-repo
+        env:
+          COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}

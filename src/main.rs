@@ -14,14 +14,26 @@ use rand::seq::SliceRandom;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use crate::LifeState::{Alive, Dead};
+use clap::{App, Arg};
 
 fn main() -> Result<()> {
+    let matches = App::new(env!("APP_NAME"))
+        .version(env!("VERSION"))
+        .author(env!("AUTHOR_EMAIL"))
+        .about("An implementation of the game of life.")
+        .arg(
+            Arg::with_name("seed")
+                .help("(Optional) Provide this to rerun a previous configuration")
+                .index(1)
+                .required(false),
+        )
+        .get_matches();
+
     let args: Vec<String> = env::args().collect();
 
-    let seed: u64 = if args.len() == 2 {
-        args[1].clone().parse::<u64>()?
-    } else {
-        rand::thread_rng().gen()
+    let seed: u64 = match matches.value_of("seed") {
+        Some(value) => value.parse::<u64>()?,
+        None => rand::thread_rng().gen(),
     };
 
     let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
