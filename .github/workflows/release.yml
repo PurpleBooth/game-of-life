@@ -220,6 +220,9 @@ jobs:
     needs: [release]
     runs-on: ubuntu-latest
     steps:
+      - id: get_repository_name
+        run: echo ::set-output name=REPOSITORY_NAME::$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}' | sed -e "s/:refs//")
+        shell: bash
       - uses: mislav/bump-homebrew-formula-action@v1.4
         if: "!contains(github.ref, '-')" # skip prereleases
         with:
