@@ -158,6 +158,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         env:
           VERSION: ${{ steps.get_version.outputs.VERSION }}
+          REPOSITORY_NAME: ${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}
         with:
           command: build
           args: --release

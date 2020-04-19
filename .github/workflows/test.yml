@@ -136,6 +136,9 @@ jobs:
         with:
           command: build
           args: --release
+      - uses: actions-rs/cargo@v1
+        env:
+          REPOSITORY_NAME: ${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}
       - uses: actions/upload-artifact@master
         with:
           name: ${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}-${{ matrix.target }}
