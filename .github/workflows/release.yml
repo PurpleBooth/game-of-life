@@ -224,7 +224,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./game-of-life-x86_64-pc-windows-msvc/game-of-life.exe
-          asset_name: game-of-life-x86_64-pc-windows-msvc
+          asset_name: game-of-life-x86_64-pc-windows-msvc.exe
           asset_content_type: application/octet-stream
   update-tap:
     needs: [release]
