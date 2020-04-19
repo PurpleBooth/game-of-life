@@ -30,7 +30,7 @@ brew tap PurpleBooth/repo
 Next install the binary
 
 ``` shell
-brew install game-of-life
+brew install PurpleBooth/repo/game-of-life
 ```
 
 You can also download the [latest
