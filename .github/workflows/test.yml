@@ -144,7 +144,6 @@ jobs:
         with:
           path: target
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-      - run: ${{ matrix.deps }}
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
