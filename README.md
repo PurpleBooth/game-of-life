@@ -1,6 +1,6 @@
 # Game of Life
 
-[![Test](https://github.com/PurpleBooth/game-of-life/workflows/Test/badge.svg)](https://github.com/PurpleBooth/game-of-life/actions?query=workflow%3ATest)
+[![.github/workflows/test.yml](https://github.com/PurpleBooth/game-of-life/workflows/.github/workflows/test.yml/badge.svg)](https://github.com/PurpleBooth/game-of-life/actions?query=workflow%3A.github%2Fworkflows%2Ftest.yml)
 
 I heard Conway died recently. I've wanted to make this for a while now
 but his death prompted me to do something I'd been meaning to try for a
