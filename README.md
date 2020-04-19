@@ -16,6 +16,25 @@ alternatively
 game-of-life
 ```
 
+## Installing
+
+First tap my homebrew repo
+
+``` shell
+brew tap PurpleBooth/repo
+```
+
+Next install the binary
+
+``` shell
+brew install game-of-life
+```
+
+You can also download the [latest
+release](https://github.com/PurpleBooth/game-of-life/releases/latest)
+and run it.
+
+
 ## License
 
 [CC0](LICENSE.md) - Public Domain
