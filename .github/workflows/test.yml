@@ -108,5 +108,5 @@ jobs:
           args: --release
       - uses: actions/upload-artifact@master
         with:
-          name: fix-gnupg-permissions-${{ matrix.target }}
-          path: ./target/release/fix-gnupg-permissions
+          name: game-of-life-${{ matrix.target }}
+          path: ./target/release/game-of-life
