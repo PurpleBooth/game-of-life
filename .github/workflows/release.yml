@@ -13,6 +13,7 @@ jobs:
         include:
           - os: macos-latest
           - os: ubuntu-latest
+          - os: windows-latest
     steps:
       - uses: actions/checkout@v2
       - name: Cache cargo registry
@@ -47,9 +48,8 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            deps: brew update && brew install zsh
           - os: ubuntu-latest
-            deps: sudo apt-get update && sudo apt-get install zsh
+          - os: windows-latest
     steps:
       - uses: actions/checkout@v2
       - name: Cache cargo registry
@@ -91,6 +91,7 @@ jobs:
         include:
           - os: macos-latest
           - os: ubuntu-latest
+          - os: windows-latest
     steps:
       - uses: actions/checkout@v2
       - name: Cache cargo registry
@@ -133,10 +134,13 @@ jobs:
         include:
           - os: macos-latest
             target: x86_64-apple-darwin
-            deps: brew update && brew install zsh
+            bin_path: ./target/release/game-of-life
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            deps: sudo apt-get update && sudo apt-get install zsh
+            bin_path: ./target/release/game-of-life
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            bin_path: ./target/release/game-of-life.exe
     steps:
       - uses: actions/checkout@master
         with:
@@ -173,7 +177,7 @@ jobs:
       - uses: actions/upload-artifact@master
         with:
           name: game-of-life-${{ matrix.target }}
-          path: ./target/release/game-of-life
+          path: ${{ matrix.bin_path }}
   release:
     needs: [build]
     runs-on: ubuntu-latest
@@ -186,6 +190,9 @@ jobs:
       - uses: actions/download-artifact@master
         with:
           name: game-of-life-x86_64-apple-darwin
+      - uses: actions/download-artifact@master
+        with:
+          name: game-of-life-x86_64-pc-windows-msvc
       - id: create_release
         uses: actions/create-release@v1.0.0
         env:
@@ -210,6 +217,14 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./game-of-life-x86_64-apple-darwin/game-of-life
           asset_name: game-of-life-x86_64-apple-darwin
+          asset_content_type: application/octet-stream
+      - uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./game-of-life-x86_64-pc-windows-msvc/game-of-life.exe
+          asset_name: game-of-life-x86_64-pc-windows-msvc
           asset_content_type: application/octet-stream
   update-tap:
     needs: [release]
