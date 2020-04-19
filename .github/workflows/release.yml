@@ -133,7 +133,7 @@ jobs:
         with:
           lfs: true
       - id: get_repository_name
-        run: echo ::set-env name=REPOSITORY_NAME::$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}' | sed -e "s/:refs//")
+        run: echo ::set-output name=REPOSITORY_NAME::$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}' | sed -e "s/:refs//")
         shell: bash
       - id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
@@ -170,7 +170,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: get_repository_name
-        run: echo ::set-env name=REPOSITORY_NAME::$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}' | sed -e "s/:refs//")
+        run: echo ::set-output name=REPOSITORY_NAME::$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}' | sed -e "s/:refs//")
         shell: bash
       - id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
