@@ -101,14 +101,17 @@ jobs:
         include:
           - os: macos-latest
             target: x86_64-apple-darwin
-            bin_path: ./target/release/game-of-life
+            suffix: ""
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            bin_path: ./target/release/game-of-life
+            suffix: ""
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            bin_path: ./target/release/game-of-life.exe
+            suffix: ".exe"
     steps:
+      - id: get_repository_name
+        run: echo ::set-env name=REPOSITORY_NAME::$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}' | sed -e "s/:refs//")
+        shell: bash
       - uses: actions/checkout@master
         with:
           lfs: true
@@ -135,5 +138,5 @@ jobs:
           args: --release
       - uses: actions/upload-artifact@master
         with:
-          name: game-of-life-${{ matrix.target }}
-          path: ${{ matrix.bin_path }}
+          name: ${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}-${{ matrix.target }}
+          path: ./target/release/${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}${{ matrix.suffix }}
