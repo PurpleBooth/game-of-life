@@ -14,13 +14,13 @@ use rand::seq::SliceRandom;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use crate::LifeState::{Alive, Dead};
-use clap::{App, Arg};
+use clap::{crate_authors, crate_version, App, Arg};
 
 fn main() -> Result<()> {
-    let matches = App::new(env!("APP_NAME"))
-        .version(env!("VERSION"))
-        .author(env!("AUTHOR_EMAIL"))
-        .about("An implementation of the game of life.")
+    let matches = App::new(env!("CARGO_PKG_NAME"))
+        .version(crate_version!())
+        .author(crate_authors!())
+        .about(env!("CARGO_PKG_DESCRIPTION"))
         .arg(
             Arg::with_name("seed")
                 .help("(Optional) Provide this to rerun a previous configuration")
