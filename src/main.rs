@@ -1,17 +1,24 @@
 extern crate crossterm;
 
-use std::borrow::BorrowMut;
-use std::io::{stdout, Write};
-use std::{env, thread, time};
+use std::{
+    borrow::BorrowMut,
+    convert::TryFrom,
+    env,
+    error,
+    io::{stdout, Write},
+    thread,
+    time,
+};
+
+type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
 use crossterm::{
-    cursor, queue,
+    cursor,
+    queue,
     style::{Color, Print, ResetColor, SetBackgroundColor, SetForegroundColor},
     terminal::size,
-    Result,
 };
-use rand::seq::SliceRandom;
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use rand::{rngs::StdRng, seq::SliceRandom, Rng, SeedableRng};
 
 use crate::LifeState::{Alive, Dead};
 use clap::{crate_authors, crate_version, App, Arg};
@@ -61,17 +68,19 @@ fn main() -> Result<()> {
     }
 
     loop {
-        draw_board(current_state.clone(), rng.borrow_mut())?;
-        current_state = next_board_state(current_state.clone());
+        draw_board(&current_state, rng.borrow_mut())?;
+        current_state = next_board_state(&current_state);
         let ten_millis = time::Duration::from_millis(500);
         thread::sleep(ten_millis);
     }
 }
 
-fn draw_board(board: Board, rng: &mut StdRng) -> Result<()> {
+fn draw_board(board: &Board, rng: &mut StdRng) -> Result<()> {
+    let top_position = u16::try_from(board.height)?;
+
     queue!(
         stdout(),
-        cursor::MoveUp(board.height as u16),
+        cursor::MoveUp(top_position),
         cursor::MoveToColumn(0),
     )?;
 
@@ -97,7 +106,7 @@ fn draw_board(board: Board, rng: &mut StdRng) -> Result<()> {
                 stdout(),
                 SetBackgroundColor(Color::Black),
                 SetForegroundColor(*colours.choose(rng).unwrap()),
-                Print("█"),
+                Print("\u{2588}"),
             )?,
             Dead => queue!(
                 stdout(),
@@ -118,12 +127,12 @@ fn draw_board(board: Board, rng: &mut StdRng) -> Result<()> {
     Ok(())
 }
 
-fn next_board_state(board: Board) -> Board {
+fn next_board_state(board: &Board) -> Board {
     let cells_in_board = board.cells.len();
     let mut new_cells: Vec<LifeState> = vec![];
 
     for position in 0..cells_in_board {
-        let neighbours = neighbours(position, board.clone());
+        let neighbours = neighbours(position, &board);
         let new_cell = next_cell_state(board.cells[position], neighbours);
         new_cells.push(new_cell)
     }
@@ -171,7 +180,7 @@ fn next_cell_state(current: LifeState, neighbours: Neighbours) -> LifeState {
     current
 }
 
-fn neighbours(position: usize, board: Board) -> Neighbours {
+fn neighbours(position: usize, board: &Board) -> Neighbours {
     (
         match get_top_left(position, &board) {
             Some(val) => board.cells[val],
@@ -302,6 +311,8 @@ type Neighbours = (
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::wildcard_imports)]
+
     use crate::LifeState::{Alive, Dead};
 
     use super::*;
@@ -317,7 +328,7 @@ mod tests {
                     Dead, Dead, Dead, Dead,
                 ],
             },
-            next_board_state(Board {
+            next_board_state(&Board {
                 height: 4,
                 width: 4,
                 cells: vec![
@@ -339,7 +350,7 @@ mod tests {
                     Alive, Dead, Dead, Dead, Dead, Dead, Dead, Dead, Dead, Dead, Dead, Dead,
                 ],
             },
-            next_board_state(Board {
+            next_board_state(&Board {
                 height: 5,
                 width: 5,
                 cells: vec![
@@ -424,21 +435,21 @@ mod tests {
 
         assert_eq!(
             (Alive, Dead, Alive, Dead, Dead, Alive, Dead, Alive),
-            neighbours(0, board.clone())
+            neighbours(0, &board)
         );
 
         assert_eq!(
             (Dead, Alive, Dead, Alive, Alive, Dead, Alive, Dead),
-            neighbours(4, board.clone())
+            neighbours(4, &board)
         );
         assert_eq!(
             (Alive, Dead, Alive, Dead, Dead, Alive, Dead, Alive),
-            neighbours(8, board.clone())
+            neighbours(8, &board)
         );
 
         assert_eq!(
             (Dead, Alive, Dead, Alive, Alive, Dead, Alive, Dead),
-            neighbours(12, board)
+            neighbours(12, &board)
         );
     }
 
@@ -512,7 +523,7 @@ mod tests {
                 Alive, // Bottom
                 Alive  // Bottom Right
             ),
-            neighbours(5, board.clone()),
+            neighbours(5, &board),
             "Middle Top Left"
         );
         assert_eq!(
@@ -526,7 +537,7 @@ mod tests {
                 Alive, // Bottom
                 Dead   // Bottom Right
             ),
-            neighbours(6, board.clone()),
+            neighbours(6, &board),
             "Middle Top Right"
         );
         assert_eq!(
@@ -540,7 +551,7 @@ mod tests {
                 Dead,  // Bottom
                 Dead   // Bottom Right
             ),
-            neighbours(9, board.clone()),
+            neighbours(9, &board),
             "Middle Bottom Left"
         );
         assert_eq!(
@@ -554,7 +565,7 @@ mod tests {
                 Dead,  // Bottom
                 Dead   // Bottom Right
             ),
-            neighbours(10, board),
+            neighbours(10, &board),
             "Middle Bottom Right"
         );
     }
