@@ -16,7 +16,8 @@ jobs:
         with:
           profile: minimal
           toolchain: nightly
-          override: true
+          default: true
+          components: 'rustfmt, clippy'
       - run: |
           make fmt
         shell: bash
