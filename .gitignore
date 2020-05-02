@@ -1,2 +1,5 @@
 /target
 /version/version
+/game-of-life-x86_64-apple-darwin/game-of-life
+/game-of-life-x86_64-pc-windows-msvc/game-of-life.exe
+/game-of-life-x86_64-unknown-linux-gnu/game-of-life
