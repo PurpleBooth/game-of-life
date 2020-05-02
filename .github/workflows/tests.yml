@@ -4,31 +4,6 @@
       - '*'
   pull_request: null
 jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v1
-        with:
-          path: ~/.cargo/registry
-          key: '${{ runner.os }}-cargo-registry-${{ hashFiles(''**/Cargo.lock'') }}'
-      - uses: actions/cache@v1
-        with:
-          path: ~/.cargo/git
-          key: '${{ runner.os }}-cargo-index-${{ hashFiles(''**/Cargo.lock'') }}'
-      - uses: actions/cache@v1
-        with:
-          path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          default: true
-          components: 'rustfmt, clippy'
-      - uses: actions-rs/cargo@v1
-        with:
-          command: check
   test:
     runs-on: '${{ matrix.os }}'
     strategy:
@@ -123,7 +98,6 @@ jobs:
       - version
       - lints
       - test
-      - check
     runs-on: '${{ matrix.os }}'
     strategy:
       matrix:
