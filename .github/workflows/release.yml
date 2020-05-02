@@ -56,9 +56,7 @@ jobs:
           default: true
           components: 'rustfmt, clippy'
       - run: |
-          make fmt
-      - run: |
-          make test
+          make fmt test
       - uses: actions-rs/cargo@v1
         with:
           command: run
@@ -86,9 +84,7 @@ jobs:
           default: true
           components: 'rustfmt, clippy'
       - run: |
-          make fmt
-      - run: |
-          make lint
+          make fmt lint
   version:
     runs-on: ubuntu-latest
     steps:

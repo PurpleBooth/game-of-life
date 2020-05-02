@@ -23,7 +23,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: nightly
           default: true
       - uses: actions-rs/cargo@v1
         with:
@@ -53,11 +53,11 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: nightly
           default: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
+          components: 'rustfmt, clippy'
+      - run: |
+          make fmt test
       - uses: actions-rs/cargo@v1
         with:
           command: run
@@ -84,14 +84,8 @@ jobs:
           toolchain: nightly
           default: true
           components: 'rustfmt, clippy'
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: '--all -- --check'
-      - uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: '--all-targets --all-features -- -D warnings -Dclippy::style -D clippy::pedantic -D clippy::cargo -A clippy::multiple_crate_versions'
+      - run: |
+          make fmt lint
   version:
     runs-on: ubuntu-latest
     steps:
@@ -107,11 +101,11 @@ jobs:
         with:
           version: '${{ steps.get_previous_version.outputs.PREVIOUS_VERSION }}'
       - run: mkdir -p ./version
-      - if: "!contains(github.event.head_commit.message, 'BC BREAK') && !contains(github.event.head_commit.message, 'Signed-off-by: dependabot-preview[bot] <support@dependabot.com>')"
+      - if: "!contains(github.event.head_commit.message, 'BC BREAK') && !contains(github.event.head_commit.message, 'Automatically Fix Code (Bot)') && !contains(github.event.head_commit.message, 'Signed-off-by: dependabot-preview[bot] <support@dependabot.com>')"
         run: echo "$VERSION" >./version/version
         env:
           VERSION: ${{ steps.semvers.outputs.v_minor }}
-      - if: "contains(github.event.head_commit.message, 'Signed-off-by: dependabot-preview[bot] <support@dependabot.com>')"
+      - if: "contains(github.event.head_commit.message, 'Automatically Fix Code (Bot)') || contains(github.event.head_commit.message, 'Signed-off-by: dependabot-preview[bot] <support@dependabot.com>')"
         run: echo "$VERSION" >./version/version
         env:
           VERSION: ${{ steps.semvers.outputs.v_patch }}
