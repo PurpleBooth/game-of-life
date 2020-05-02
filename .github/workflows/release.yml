@@ -24,6 +24,7 @@ jobs:
           profile: minimal
           toolchain: nightly
           default: true
+          components: 'rustfmt, clippy'
       - uses: actions-rs/cargo@v1
         with:
           command: check
@@ -163,6 +164,7 @@ jobs:
           profile: minimal
           toolchain: nightly
           default: true
+          components: 'rustfmt, clippy'
       - uses: actions-rs/cargo@v1
         with:
           command: install
