@@ -22,7 +22,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: nightly
           default: true
       - uses: actions-rs/cargo@v1
         with:
@@ -52,11 +52,13 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: nightly
           default: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
+          components: 'rustfmt, clippy'
+      - run: |
+          make fmt
+      - run: |
+          make test
       - uses: actions-rs/cargo@v1
         with:
           command: run
@@ -83,14 +85,10 @@ jobs:
           toolchain: nightly
           default: true
           components: 'rustfmt, clippy'
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: '--all -- --check'
-      - uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: '--all-targets --all-features -- -D warnings -Dclippy::style -D clippy::pedantic -D clippy::cargo -A clippy::multiple_crate_versions'
+      - run: |
+          make fmt
+      - run: |
+          make lint
   version:
     runs-on: ubuntu-latest
     steps:
@@ -209,8 +207,11 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
-          override: true
+          toolchain: nightly
+          default: true
+          components: 'rustfmt, clippy'
+      - run: |
+          make fmt
       - uses: actions-rs/cargo@v1
         with:
           command: install
@@ -224,9 +225,9 @@ jobs:
           VERSION: '${{ steps.get_version.outputs.VERSION }}'
       - uses: stefanzweifel/git-auto-commit-action@v4.1.3
         with:
-          commit_message: Bump cargo version
+          commit_message: Bump cargo version + format
           branch: ${{ github.head_ref }}
-          file_pattern: Cargo.toml
+          file_pattern: "{Cargo.toml,Cargo.lock,*.rs}"
           commit_author: GitHub Action[bot] <actions@github.com>
       - id: create_release
         uses: actions/create-release@v1.0.0
