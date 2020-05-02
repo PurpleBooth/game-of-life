@@ -1,0 +1,27 @@
+'on':
+  push:
+    branches:
+      - '*'
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          lfs: true
+      - id: get_repository_name
+        run: echo ::set-output name=REPOSITORY_NAME::$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}' | sed -e "s/:refs//")
+        shell: bash
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+      - run: |
+          make fmt
+        shell: bash
+      - uses: stefanzweifel/git-auto-commit-action@v4.1.3
+        with:
+          commit_message: Automatically Fix Code (Bot)
+          branch: ${{ github.head_ref }}
+          commit_author: GitHub Action <actions@github.com>

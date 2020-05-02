@@ -106,11 +106,11 @@ jobs:
         with:
           version: '${{ steps.get_previous_version.outputs.PREVIOUS_VERSION }}'
       - run: mkdir -p ./version
-      - if: "!contains(github.event.head_commit.message, 'BC BREAK') && !contains(github.event.head_commit.message, 'Signed-off-by: dependabot-preview[bot] <support@dependabot.com>')"
+      - if: "!contains(github.event.head_commit.message, 'BC BREAK') && !contains(github.event.head_commit.message, 'Automatically Fix Code (Bot)') && !contains(github.event.head_commit.message, 'Signed-off-by: dependabot-preview[bot] <support@dependabot.com>')"
         run: echo "$VERSION" >./version/version
         env:
           VERSION: ${{ steps.semvers.outputs.v_minor }}
-      - if: "contains(github.event.head_commit.message, 'Signed-off-by: dependabot-preview[bot] <support@dependabot.com>')"
+      - if: "contains(github.event.head_commit.message, 'Automatically Fix Code (Bot)') || contains(github.event.head_commit.message, 'Signed-off-by: dependabot-preview[bot] <support@dependabot.com>')"
         run: echo "$VERSION" >./version/version
         env:
           VERSION: ${{ steps.semvers.outputs.v_patch }}
@@ -227,6 +227,7 @@ jobs:
           commit_message: Bump cargo version
           branch: ${{ github.head_ref }}
           file_pattern: Cargo.toml
+          commit_author: GitHub Action <actions@github.com>
       - id: create_release
         uses: actions/create-release@v1.0.0
         env:
