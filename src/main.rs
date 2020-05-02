@@ -101,19 +101,20 @@ fn draw_board(board: &Board, rng: &mut StdRng) -> Result<()> {
             Color::Grey,
         ];
 
-        match board.cells[position] {
-            Alive => queue!(
+        match board.cells.get(position) {
+            Some(Alive) => queue!(
                 stdout(),
                 SetBackgroundColor(Color::Black),
                 SetForegroundColor(*colours.choose(rng).unwrap()),
                 Print("\u{2588}"),
             )?,
-            Dead => queue!(
+            Some(Dead) => queue!(
                 stdout(),
                 SetForegroundColor(Color::Black),
                 SetBackgroundColor(Color::Black),
                 Print(" "),
             )?,
+            None => return Err(Box::from(format!("Cell {} not found", position))),
         }
 
         if position + 1 != board.width * board.height && position % board.width == (board.width - 1)
