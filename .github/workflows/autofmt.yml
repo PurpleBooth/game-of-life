@@ -24,4 +24,4 @@ jobs:
         with:
           commit_message: Automatically Fix Code (Bot)
           branch: ${{ github.head_ref }}
-          commit_author: GitHub Action <actions@github.com>
+          commit_author: GitHub Action[bot] <actions@github.com>
