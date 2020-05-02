@@ -26,7 +26,7 @@ lint:
 	rustup run stable cargo check
 
 .PHONY: fmt
-## Format what can be foramtted
+## Format what can be formatted
 fmt:
 	rustup run nightly cargo fmt --all
 	rustup run nightly cargo fix --allow-dirty
