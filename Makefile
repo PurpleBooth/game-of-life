@@ -22,7 +22,7 @@ build:
 ## Lint it
 lint:
 	cargo fmt --all -- --check
-	cargo clippy --all-targets --all-features -- -D warnings -Dclippy::style -D clippy::pedantic -D clippy::cargo -A clippy::multiple_crate_versions
+	cargo clippy --all-targets --all-features -- -D warnings -Dclippy::all -Dclippy::pedantic
 	cargo check
 
 .PHONY: fmt

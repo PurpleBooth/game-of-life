@@ -10,8 +10,7 @@ use std::{
     time,
 };
 
-type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
-
+use clap::{crate_authors, crate_version, App, Arg};
 use crossterm::{
     cursor,
     queue,
@@ -21,7 +20,8 @@ use crossterm::{
 use rand::{rngs::StdRng, seq::SliceRandom, Rng, SeedableRng};
 
 use crate::LifeState::{Alive, Dead};
-use clap::{crate_authors, crate_version, App, Arg};
+
+type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
 fn main() -> Result<()> {
     let matches = App::new(env!("CARGO_PKG_NAME"))
@@ -40,13 +40,8 @@ fn main() -> Result<()> {
 
     let args: Vec<String> = env::args().collect();
 
-    let seed: u64 = match matches.value_of("seed") {
-        Some(value) => value.parse::<u64>()?,
-        None => rand::thread_rng().gen(),
-    };
-
+    let seed = generate_seed(matches.value_of("seed")).unwrap();
     let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
-
     let mut cells: Vec<LifeState> = vec![];
 
     let size = size()?;
@@ -73,6 +68,15 @@ fn main() -> Result<()> {
         let ten_millis = time::Duration::from_millis(500);
         thread::sleep(ten_millis);
     }
+}
+
+fn generate_seed(seed: Option<&str>) -> Option<u64> {
+    let generate_random_number = || rand::thread_rng().gen();
+    let map_inner_err = |x: std::result::Result<u64, std::num::ParseIntError>| x.map_err(Box::from);
+    seed.map(str::parse::<u64>)
+        .map(map_inner_err)
+        .and_then(Result::ok)
+        .or_else(generate_random_number)
 }
 
 fn draw_board(board: &Board, rng: &mut StdRng) -> Result<()> {
