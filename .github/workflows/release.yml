@@ -207,7 +207,7 @@ jobs:
           release_name: 'Release ${{ steps.get_version.outputs.VERSION }}'
           draft: false
           prerelease: false
-      - uses: actions/upload-release-asset@v1.0.1
+      - uses: actions/upload-release-asset@v1.0.2
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
         with:
@@ -215,7 +215,7 @@ jobs:
           asset_path: ./${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}-x86_64-unknown-linux-gnu/${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}
           asset_name: ${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}-x86_64-unknown-linux-gnu
           asset_content_type: application/octet-stream
-      - uses: actions/upload-release-asset@v1.0.1
+      - uses: actions/upload-release-asset@v1.0.2
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
         with:
@@ -223,7 +223,7 @@ jobs:
           asset_path: ./${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}-x86_64-apple-darwin/${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}
           asset_name: ${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}-x86_64-apple-darwin
           asset_content_type: application/octet-stream
-      - uses: actions/upload-release-asset@v1.0.1
+      - uses: actions/upload-release-asset@v1.0.2
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
         with:
