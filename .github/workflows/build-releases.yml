@@ -51,7 +51,7 @@ jobs:
             suffix: ""
             target: x86_64-unknown-linux-gnu
           -
-            os: ubuntu-latest
+            os: windows-latest
             suffix: ".exe"
             target: x86_64-pc-windows-msvc
   release:
