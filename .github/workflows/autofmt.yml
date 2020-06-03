@@ -20,7 +20,7 @@ jobs:
       - run: |
           make fmt
         shell: bash
-      - uses: stefanzweifel/git-auto-commit-action@v4.1.3
+      - uses: stefanzweifel/git-auto-commit-action@v4.3.0
         with:
           commit_message: Automatically Fix Code (Bot)
           branch: ${{ github.head_ref }}
