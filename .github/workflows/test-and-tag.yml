@@ -49,6 +49,7 @@ jobs:
           default: true
       - uses: actions-rs/cargo@v1
         with:
+          args: "--locked"
           command: test
   lints:
     runs-on: ubuntu-latest
@@ -128,6 +129,7 @@ jobs:
           rm Cargo.toml.bak
       - uses: actions-rs/cargo@v1
         with:
+          args: "--offline"
           command: generate-lockfile
       - shell: bash
         run: |

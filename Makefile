@@ -11,12 +11,12 @@ show-help:
 .PHONY: test
 ## Test it was built ok
 test:
-	RUST_BACKTRACE=1 cargo test
+	RUST_BACKTRACE=1 cargo test --locked
 
 .PHONY: build
 ## Build a release copy
 build:
-	cargo build --release
+	cargo build --release --locked
 
 .PHONY: lint
 ## Lint it
