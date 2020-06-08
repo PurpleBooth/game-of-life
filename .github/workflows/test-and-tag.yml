@@ -129,8 +129,7 @@ jobs:
           rm Cargo.toml.bak
       - uses: actions-rs/cargo@v1
         with:
-          args: "--offline"
-          command: generate-lockfile
+          command: check
       - shell: bash
         run: |
           git config user.name "GitHub"
