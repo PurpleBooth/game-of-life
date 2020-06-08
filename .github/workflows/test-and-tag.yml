@@ -78,7 +78,7 @@ jobs:
           command: clippy
           args: '--all-targets --all-features -- -D warnings -Dclippy::style -D clippy::pedantic -D clippy::cargo'
   merge-and-push:
-    if: contains( github.event.pull_request.labels.*.name, 'dependencies') || ( github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, 'Release v') )
+    if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]' || ( github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, 'Release v') )
     needs:
       - test
       - lints
@@ -140,8 +140,10 @@ jobs:
       - shell: bash
         if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
         run: |
+          git stash
           git checkout master
           git merge --ff-only -
+          git stash pop
       - shell: bash
         run: |
           git commit -am "Release $(cat ./version/version)"
