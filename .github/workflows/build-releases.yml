@@ -2,6 +2,7 @@
   push:
     tags:
       - '*'
+name: build-releases
 jobs:
   build:
     runs-on: "${{ matrix.os }}"
