@@ -1,12 +1,69 @@
-'on':
+"on":
   push:
     branches:
-      - '*'
+      - "*"
   pull_request: null
-    
-name: test-and-tag
-
 jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.1
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          default: true
+      - uses: actions/checkout@v2.3.1
+        with:
+          fetch-depth: 0
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - run: git fetch origin +refs/tags/*:refs/tags/*
+      - id: get_previous_version
+        run: echo ::set-output name=PREVIOUS_VERSION::$(git tag | sort --version-sort | tail -n 1)
+        shell: bash
+      - id: get_last_common_commit
+        run: echo ::set-output name=LAST_COMMON_COMMIT::$(git merge-base "$THIS" "$PREVIOUS_VERSION")
+        shell: bash
+        env:
+          PREVIOUS_VERSION: "${{ steps.get_previous_version.outputs.PREVIOUS_VERSION }}"
+          THIS: "${{ github.sha }}"
+      - uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: what-bump --force
+      - run: mkdir -p ./version
+      - run: |
+          what-bump "${LAST_COMMON_COMMIT}" --from "${PREVIOUS_VERSION:1}" > ./version/no_prefix_version
+          echo "v" > ./version/prefix
+          cat ./version/prefix ./version/no_prefix_version | tr  -d '\n' > ./version/version
+        env:
+          PREVIOUS_VERSION: "${{ steps.get_previous_version.outputs.PREVIOUS_VERSION }}"
+          LAST_COMMON_COMMIT: "${{ steps.get_last_common_commit.outputs.LAST_COMMON_COMMIT }}"
+      - uses: actions/upload-artifact@v2
+        with:
+          name: version
+          path: ./version/version
   check:
     runs-on: ubuntu-latest
     steps:
@@ -22,20 +79,26 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: stable
           default: true
       - uses: actions-rs/cargo@v1
         with:
           command: check
   test:
-    runs-on: '${{ matrix.os }}'
+    runs-on: "${{ matrix.os }}"
     strategy:
       matrix:
         include:
           - os: macos-latest
+            install: echo nothing-to-install
           - os: ubuntu-latest
+            install: sudo apt-get install -y libxcb-shape0-dev libxcb-xfixes0-dev
           - os: windows-latest
+            install: echo nothing-to-install
     steps:
+      - run: ${{ matrix.install }}
+        env:
+          DEBIAN_FRONTEND: noninteractive
       - uses: actions/checkout@v2.3.1
       - uses: actions/cache@v2
         with:
@@ -48,10 +111,11 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: stable
           default: true
       - uses: actions-rs/cargo@v1
         with:
+          args: " --locked"
           command: test
   lints:
     runs-on: ubuntu-latest
@@ -68,34 +132,36 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: stable
           default: true
-          components: 'rustfmt, clippy'
+          components: "rustfmt, clippy"
       - uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: '--all -- --check'
+          args: "--all -- --check"
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: '--all-targets --all-features -- -D warnings -Dclippy::style -D clippy::pedantic -D clippy::cargo'
+          args: "--all-targets --all-features -- -D warnings -Dclippy::all -D clippy::pedantic -D clippy::cargo -A clippy::multiple-crate-versions"
+      - name: Prettify code
+        uses: creyD/prettier_action@v3.0
+        with:
+          # This part is also where you can pass other options, for example:
+          prettier_options: --check **/*.{yml,yaml}
   merge-and-push:
-    if: github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Release v')
+    if: github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Update cargo package version to v')
     needs:
+      - version
       - test
       - lints
       - check
+      - security-audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          default: true
       - uses: actions/checkout@v2.3.1
         with:
-          token: '${{ secrets.COMMITTER_TOKEN }}'
-          fetch-depth: 0  
+          token: "${{ secrets.COMMITTER_TOKEN }}"
+          fetch-depth: 0
       - uses: actions/cache@v2
         with:
           path: |
@@ -104,53 +170,36 @@ jobs:
             ~/.cargo/bin
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-      - id: get_previous_version
-        run: echo ::set-output name=PREVIOUS_VERSION::$(git tag --sort=-creatordate | head -n 1)
+      - uses: actions/download-artifact@v2
+      - id: get_current_version
+        run: |
+          echo ::set-output name=VERSION::$(cat ./version/version | cut -c2-)
+          echo ::set-output name=V_VERSION::$(cat ./version/version)
         shell: bash
-      - id: semvers
-        uses: WyriHaximus/github-action-next-semvers@master
+      - uses: ciiiii/toml-editor@1.0.0
         with:
-          version: '${{ steps.get_previous_version.outputs.PREVIOUS_VERSION }}'
-      - run: mkdir -p ./version
-      - if: "!contains(github.event.head_commit.message, 'BC BREAK') && !contains(github.event.head_commit.message, 'Signed-off-by: dependabot-preview[bot] <support@dependabot.com>')"
-        run: echo "$VERSION" >./version/version
-        env:
-          VERSION: ${{ steps.semvers.outputs.v_minor }}
-      - if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
-        run: echo "$VERSION" >./version/version
-        env:
-          VERSION: ${{ steps.semvers.outputs.v_patch }}
-      - run: echo "$VERSION" > ./version/version
-        env:
-          VERSION: ${{ steps.semvers.outputs.v_major }}
-        if: "contains(github.event.head_commit.message, 'BC BREAK')"
-      - shell: bash
-        id: get_version
-        run: |
-          echo ::set-output "name=VERSION::$( cat ./version/version )"
-      - shell: bash
-        run: |
-          sed -i'.bak' "s/version = \"[0-9.]\\{5,\\}\"/version = \"$(cat ./version/version | tail -c +2)\"/1" Cargo.toml
-          rm Cargo.toml.bak
+          file: "Cargo.toml"
+          key: "package.version"
+          value: ${{ steps.get_current_version.outputs.VERSION }}
       - uses: actions-rs/cargo@v1
         with:
           command: check
       - shell: bash
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
         run: |
-          git config user.name "GitHub"
-          git config user.email "noreply@github.com"
-          git commit -am "Release $(cat ./version/version)"
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git commit -am "fix: Update cargo package version to $(cat ./version/version)"
           git tag -a -m "Release $(cat ./version/version)" "$(cat ./version/version)"
           git push --tags
-          
+
           git checkout -b "release-$(cat ./version/version)"
           git push -f origin "release-$(cat ./version/version)"
       - name: pull-request
         uses: repo-sync/pull-request@v2
         with:
-          github_token: '${{ secrets.COMMITTER_TOKEN }}'
+          github_token: "${{ secrets.COMMITTER_TOKEN }}"
           pr_label: "releases"
           destination_branch: "main"
-          source_branch: "release-${{ steps.get_version.outputs.VERSION }}"
-
+          source_branch: "release-${{ steps.get_current_version.outputs.V_VERSION }}"
