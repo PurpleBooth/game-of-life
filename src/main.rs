@@ -3,17 +3,14 @@ extern crate crossterm;
 use std::{
     borrow::BorrowMut,
     convert::TryFrom,
-    env,
-    error,
+    env, error,
     io::{stdout, Write},
-    thread,
-    time,
+    thread, time,
 };
 
 use clap::{crate_authors, crate_version, App, Arg};
 use crossterm::{
-    cursor,
-    queue,
+    cursor, queue,
     style::{Color, Print, ResetColor, SetBackgroundColor, SetForegroundColor},
     terminal::size,
 };
