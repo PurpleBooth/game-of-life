@@ -13,5 +13,6 @@ class GameOfLife < Formula
   test do
     system "#{bin}/game-of-life", "-h"
     system "#{bin}/game-of-life", "-V"
+    system "#{bin}/game-of-life", "-s", "1"
   end
 end
