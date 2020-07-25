@@ -1,5 +1,6 @@
 extern crate crossterm;
 
+use rand::prelude::*;
 use std::{
     borrow::BorrowMut,
     convert::TryFrom,
@@ -8,36 +9,51 @@ use std::{
     thread, time,
 };
 
-use clap::{crate_authors, crate_version, App, Arg};
+use clap::{crate_authors, crate_description, crate_name, crate_version, App, Arg};
 use crossterm::{
     cursor, queue,
     style::{Color, Print, ResetColor, SetBackgroundColor, SetForegroundColor},
     terminal::size,
 };
-use rand::{rngs::StdRng, seq::SliceRandom, Rng, SeedableRng};
 
 use crate::LifeState::{Alive, Dead};
+use std::ops::Range;
+use std::str::FromStr;
 
 type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
+#[derive(Debug)]
+enum NumberOfSteps {
+    Infinite,
+    Limited(Range<usize>),
+}
+
 fn main() -> Result<()> {
-    let matches = App::new(env!("CARGO_PKG_NAME"))
+    let matches = App::new(crate_name!())
         .version(crate_version!())
         .author(crate_authors!())
-        .about(env!("CARGO_PKG_DESCRIPTION"))
+        .about(crate_description!())
         .arg(
             Arg::with_name("seed")
                 .help("(Optional) Provide this to rerun a previous configuration")
                 .index(1)
-                .conflicts_with("version")
-                .conflicts_with("help")
                 .required(false),
+        )
+        .arg(
+            Arg::with_name("max-steps")
+                .long("max-steps")
+                .short("s")
+                .help("Stop after a number of steps")
+                .required(false)
+                .takes_value(true),
         )
         .get_matches();
 
     let args: Vec<String> = env::args().collect();
 
-    let seed = generate_seed(matches.value_of("seed")).unwrap();
+    let seed = generate_seed(matches.value_of("seed"))
+        .or_else(|| generate_seed(matches.value_of("seed")))
+        .expect("failed to generate seed");
     let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
     let mut cells: Vec<LifeState> = vec![];
 
@@ -52,6 +68,11 @@ fn main() -> Result<()> {
         cells,
     };
 
+    let mut loop_range = match matches.value_of("max-steps") {
+        Some(max_steps) => NumberOfSteps::Limited((0 as usize)..usize::from_str(max_steps)?),
+        None => NumberOfSteps::Infinite,
+    };
+
     println!("To recreate run:");
     println!("{} {}", args[0], seed);
     // Draw space for the board
@@ -59,21 +80,24 @@ fn main() -> Result<()> {
         queue!(stdout(), Print("\n"),)?
     }
 
-    loop {
+    while match &mut loop_range {
+        NumberOfSteps::Limited(range) => range.next().is_some(),
+        NumberOfSteps::Infinite => true,
+    } {
         draw_board(&current_state, rng.borrow_mut())?;
         current_state = next_board_state(&current_state);
         let ten_millis = time::Duration::from_millis(500);
         thread::sleep(ten_millis);
     }
+
+    Ok(())
 }
 
 fn generate_seed(seed: Option<&str>) -> Option<u64> {
-    let generate_random_number = || rand::thread_rng().gen();
-    let map_inner_err = |x: std::result::Result<u64, std::num::ParseIntError>| x.map_err(Box::from);
     seed.map(str::parse::<u64>)
-        .map(map_inner_err)
+        .map(|x: std::result::Result<u64, std::num::ParseIntError>| x.map_err(Box::from))
         .and_then(Result::ok)
-        .or_else(generate_random_number)
+        .or_else(|| rand::thread_rng().gen())
 }
 
 fn draw_board(board: &Board, rng: &mut StdRng) -> Result<()> {
