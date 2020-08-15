@@ -1,3 +1,5 @@
+name: Release to Homebrew
+
 "on":
   push:
     tags:
@@ -30,106 +32,46 @@ jobs:
         name: Generate the template
       - uses: actions/upload-artifact@v2
         with:
-          name: formula
+          name: new-formula
           path: ./formula.rb
         name: Store the formula
-      - uses: actions/upload-artifact@v2
-        with:
-          name: hash
-          path: ./hash
-        name: Store the hash of the binary
   build:
     name: Update custom tap
     needs:
       - generate-formula
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - id: get_repository_name
         name: Work out repository name
         run: echo ::set-output "name=REPOSITORY_NAME::$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}' | sed -e "s/:refs//")"
         shell: bash
-      - uses: actions/download-artifact@v2
-        name: Get the updated formula
       - uses: actions/checkout@v2.3.1
         with:
           repository: PurpleBooth/homebrew-repo
           token: ${{ secrets.COMMITTER_TOKEN }}
-          path: homebrew-repo
           ref: "main"
         name: Checkout the custom tap
-      - uses: actions/checkout@v2.3.1
+      - uses: actions/download-artifact@v2
+        name: Get the updated formula
+      - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v2
         with:
-          token: ${{ secrets.COMMITTER_TOKEN }}
-          path: source-repo
-        name: Checkout the this repository
-      - name: Set up Homebrew
-        id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@master
-      - name: Cache Homebrew Bundler RubyGems
-        id: cache
-        uses: actions/cache@master
-        with:
-          path: ${{ steps.set-up-homebrew.outputs.gems-path }}
-          key: ${{ runner.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
-          restore-keys: ${{ runner.os }}-rubygems-
-      - name: Install Homebrew Bundler RubyGems
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: brew install-bundler-gems
-      - name: Test the formula
-        shell: bash
-        run: |
-          brew update-reset
-          brew test-bot --cleanup --only-cleanup-before
-          brew tap purplebooth/repo
-          cp formula/formula.rb "$(brew --repo)/Library/Taps/purplebooth/homebrew-repo/Formula/$REPOSITORY_NAME.rb"
-          brew install "purplebooth/repo/$REPOSITORY_NAME"
-          unset GITHUB_ACTIONS
-          brew test-bot \
-            --bintray-org="$BINTRAY_ORG" \
-            --root-url="$BINTRAY_DL_URL" \
-            --tap=purplebooth/repo \
-            --git-name="$GITHUB_ACTOR" \
-            --git-email="$GITHUB_ACTOR@users.noreply.github.com" \
-            "purplebooth/repo/$REPOSITORY_NAME"
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
         env:
-          REPOSITORY_NAME: ${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}
-          BINTRAY_DL_URL: https://dl.bintray.com/purplebooth/bottles-repo
-          BINTRAY_ORG: purplebooth
-      - shell: bash
-        name: Build binaries for the formula
-        run: |
-          unset GITHUB_ACTIONS
-          brew test-bot \
-            --ci-upload \
-            --bintray-org="$BINTRAY_ORG" \
-            --root-url="$BINTRAY_DL_URL" \
-            --tap=purplebooth/repo \
-            --git-name="$GITHUB_ACTOR" \
-            --git-email="$GITHUB_ACTOR@users.noreply.github.com" \
-            --publish \
-            "purplebooth/repo/$REPOSITORY_NAME"
-        env:
-          REPOSITORY_NAME: ${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}
-          HOMEBREW_BINTRAY_USER: purplebooth
-          HOMEBREW_BINTRAY_KEY: "${{ secrets.HOMEBREW_BINTRAY_KEY }}"
-          BINTRAY_DL_URL: https://dl.bintray.com/purplebooth/bottles-repo
-          BINTRAY_ORG: purplebooth
+          GPG_PRIVATE_KEY: ${{ secrets.SIGNING_KEY_PRIV }}
+          PASSPHRASE: ${{ secrets.SIGNING_KEY_PASS }}
       - shell: bash
         name: Open a PR on the custom tap repository
         run: |
-          mkdir -p $HOME/.config/gh/
-          cat > $HOME/.config/gh/config.yml <<EOF
-          github.com:
-           - user: "$GH_USERNAME"
-             oauth_token: "$GITHUB_TOKEN"
-          EOF
-          brew install github/gh/gh
-
-          git -C homebrew-repo remote add tap "$(brew --repo)/Library/Taps/purplebooth/homebrew-repo"
-          git -C homebrew-repo switch -c "$REPOSITORY_NAME-$(echo $GIT_TAG | sed 's/^refs\/tags\///')"
-          git -C homebrew-repo fetch tap
-          git -C homebrew-repo merge --no-ff tap/main
-          (cd homebrew-repo && gh pr create --label bottles --base main --fill)
+          VERSION="$(echo $GIT_TAG | sed 's/^refs\/tags\///')"
+          git switch -c "$REPOSITORY_NAME-$VERSION"
+          mv new-formula/formula.rb "Formula/$REPOSITORY_NAME.rb"
+          git add "Formula/$REPOSITORY_NAME.rb"
+          git commit -m "fix: Update $REPOSITORY_NAME to $VERSION"
+          gh pr create --label bottles --base main --fill
         env:
           REPOSITORY_NAME: ${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}
           GIT_TAG: ${{ github.ref }}
