@@ -184,12 +184,20 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: check
+      - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v2
+        with:
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.SIGNING_KEY_PRIV }}
+          PASSPHRASE: ${{ secrets.SIGNING_KEY_PASS }}
       - shell: bash
         env:
           GITHUB_ACTOR: ${{ github.actor }}
         run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git commit -am "fix: Update cargo package version to $(cat ./version/version)"
           git tag -a -m "Release $(cat ./version/version)" "$(cat ./version/version)"
           git push --tags
