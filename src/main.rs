@@ -1,6 +1,8 @@
 extern crate crossterm;
+extern crate retry;
 
 use rand::prelude::*;
+use retry::retry;
 use std::{
     borrow::BorrowMut,
     convert::TryFrom,
@@ -17,6 +19,8 @@ use crossterm::{
 };
 
 use crate::LifeState::{Alive, Dead};
+
+use retry::delay::Fixed;
 use std::ops::Range;
 use std::str::FromStr;
 
@@ -51,9 +55,7 @@ fn main() -> Result<()> {
 
     let args: Vec<String> = env::args().collect();
 
-    let seed = generate_seed(matches.value_of("seed"))
-        .or_else(|| generate_seed(matches.value_of("seed")))
-        .expect("failed to generate seed");
+    let seed = generate_seed(matches.value_of("seed")).expect("failed to generate seed");
     let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
     let mut cells: Vec<LifeState> = vec![];
 
@@ -97,7 +99,16 @@ fn generate_seed(seed: Option<&str>) -> Option<u64> {
     seed.map(str::parse::<u64>)
         .map(|x: std::result::Result<u64, std::num::ParseIntError>| x.map_err(Box::from))
         .and_then(Result::ok)
-        .or_else(|| rand::thread_rng().gen())
+        .or_else(|| {
+            retry(
+                Fixed::from_millis(100).take(50),
+                || match rand::thread_rng().gen() {
+                    Some(n) => Ok(n),
+                    None => Err("No seed generated"),
+                },
+            )
+            .ok()
+        })
 }
 
 fn draw_board(board: &Board, rng: &mut StdRng) -> Result<()> {

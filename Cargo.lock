@@ -94,6 +94,7 @@ dependencies = [
  "clap",
  "crossterm",
  "rand",
+ "retry",
 ]
 
 [[package]]
@@ -255,6 +256,15 @@ name = "redox_syscall"
 version = "0.1.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "41cc0f7e4d5d4544e8861606a285bb08d3e70712ccc7d2b84d7c0ccfaf4b05ce"
+
+[[package]]
+name = "retry"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ddadf3a46af916aa0fe6b8283e676b6bb5cbdf835d986d98a49d7345072341e5"
+dependencies = [
+ "rand",
+]
 
 [[package]]
 name = "scopeguard"
