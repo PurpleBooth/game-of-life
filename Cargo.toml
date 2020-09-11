@@ -1,6 +1,6 @@
 [package]
 name = "game-of-life"
-version = "1.53.12"
+version = "1.53.14"
 authors = [ "Billie Thompson <billie+game-of-life@billiecodes.com>" ]
 edition = "2018"
 description = "An implementation of the game of life."
