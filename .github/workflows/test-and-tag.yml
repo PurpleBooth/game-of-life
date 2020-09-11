@@ -188,12 +188,11 @@ jobs:
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v3
         with:
-          git_user_signingkey: true
-          git_commit_gpgsign: true
-          git_tag_gpgsign: true
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.SIGNING_KEY_PRIV }}
-          PASSPHRASE: ${{ secrets.SIGNING_KEY_PASS }}
+          gpg-private-key: ${{ secrets.SIGNING_KEY_PRIV }}
+          passphrase: ${{ secrets.SIGNING_KEY_PASS }}
+          git-tag-gpgsigngpgsign: true
+          git-user-signingkey: true
+          git-commit-gpgsign: true
       - shell: bash
         env:
           GITHUB_ACTOR: ${{ github.actor }}
