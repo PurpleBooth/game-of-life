@@ -1,7 +1,6 @@
 pull_request_rules:
   - name: automatic squash merge for main when tests pass
     conditions:
-      - status-success=validate-commits
       - "status-success=lints"
       - "status-success=version"
       - "status-success=test (ubuntu-latest, sudo apt-get install -y libxcb-shape0-dev libxcb-xfixes0-dev)"
@@ -17,7 +16,6 @@ pull_request_rules:
         method: squash
   - name: automatic rebase for main when tests pass
     conditions:
-      - status-success=validate-commits
       - "status-success=lints"
       - "status-success=version"
       - "status-success=test (ubuntu-latest, sudo apt-get install -y libxcb-shape0-dev libxcb-xfixes0-dev)"
@@ -33,7 +31,6 @@ pull_request_rules:
         method: rebase
   - name: automatic rebase for releases
     conditions:
-      - status-success=validate-commits
       - "status-success=lints"
       - "status-success=version"
       - "status-success=test (ubuntu-latest, sudo apt-get install -y libxcb-shape0-dev libxcb-xfixes0-dev)"
@@ -49,7 +46,6 @@ pull_request_rules:
         method: merge
   - name: automatic rebase for dependencies
     conditions:
-      - status-success=validate-commits
       - "status-success=lints"
       - "status-success=version"
       - "status-success=test (ubuntu-latest, sudo apt-get install -y libxcb-shape0-dev libxcb-xfixes0-dev)"
