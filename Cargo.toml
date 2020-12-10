@@ -14,4 +14,4 @@ categories = [ "command-line-utilities", "games", "visualization" ]
 crossterm = "0.18"
 rand = "0.7"
 clap = "2.33"
-retry = "1.0.0"
+retry = "1.2.0"
