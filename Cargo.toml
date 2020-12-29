@@ -11,7 +11,7 @@ keywords = [ "life", "game", "kata" ]
 categories = [ "command-line-utilities", "games", "visualization" ]
 
 [dependencies]
-crossterm = "0.18"
+crossterm = "0.19"
 rand = "0.8"
 clap = "2.33"
 retry = "1.2.0"
