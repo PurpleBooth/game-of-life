@@ -1,8 +1,8 @@
 extern crate crossterm;
 extern crate retry;
 
-use rand::prelude::*;
-use retry::retry;
+use std::ops::Range;
+use std::str::FromStr;
 use std::{
     borrow::BorrowMut,
     convert::TryFrom,
@@ -17,12 +17,11 @@ use crossterm::{
     style::{Color, Print, ResetColor, SetBackgroundColor, SetForegroundColor},
     terminal::size,
 };
+use rand::prelude::*;
+use retry::delay::Fixed;
+use retry::retry;
 
 use crate::LifeState::{Alive, Dead};
-
-use retry::delay::Fixed;
-use std::ops::Range;
-use std::str::FromStr;
 
 type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
@@ -71,7 +70,7 @@ fn main() -> Result<()> {
     };
 
     let mut loop_range = match matches.value_of("max-steps") {
-        Some(max_steps) => NumberOfSteps::Limited((0 as usize)..usize::from_str(max_steps)?),
+        Some(max_steps) => NumberOfSteps::Limited(0_usize..usize::from_str(max_steps)?),
         None => NumberOfSteps::Infinite,
     };
 
@@ -219,107 +218,71 @@ fn next_cell_state(current: LifeState, neighbours: Neighbours) -> LifeState {
 
 fn neighbours(position: usize, board: &Board) -> Neighbours {
     (
-        match get_top_left(position, &board) {
-            Some(val) => board.cells[val],
-            None => Dead,
-        },
-        match get_top(position, &board) {
-            Some(val) => board.cells[val],
-            None => Dead,
-        },
-        match get_top_right(position, &board) {
-            Some(val) => board.cells[val],
-            None => Dead,
-        },
-        match get_left(position, &board) {
-            Some(val) => board.cells[val],
-            None => Dead,
-        },
-        match get_right(position, &board) {
-            Some(val) => board.cells[val],
-            None => Dead,
-        },
-        match get_bottom_left(position, &board) {
-            Some(val) => board.cells[val],
-            None => Dead,
-        },
-        match get_bottom(position, &board) {
-            Some(val) => board.cells[val],
-            None => Dead,
-        },
-        match get_bottom_right(position, &board) {
-            Some(val) => board.cells[val],
-            None => Dead,
-        },
+        board.cells[get_top_left(position, &board)],
+        board.cells[get_top(position, &board)],
+        board.cells[get_top_right(position, &board)],
+        board.cells[get_left(position, &board)],
+        board.cells[get_right(position, &board)],
+        board.cells[get_bottom_left(position, &board)],
+        board.cells[get_bottom(position, &board)],
+        board.cells[get_bottom_right(position, &board)],
     )
 }
 
-fn get_top_left(position: usize, board: &Board) -> Option<usize> {
-    match get_top(position, board) {
-        Some(val) => get_left(val, board),
-        None => None,
-    }
+fn get_top_left(position: usize, board: &Board) -> usize {
+    get_left(get_top(position, board), board)
 }
 
-fn get_top(position: usize, board: &Board) -> Option<usize> {
+fn get_top(position: usize, board: &Board) -> usize {
     if position < board.width {
-        return Some(position + (board.width * (board.height - 1)));
+        return position + (board.width * (board.height - 1));
     }
 
-    Some(position - board.width)
+    position - board.width
 }
 
-fn get_top_right(position: usize, board: &Board) -> Option<usize> {
-    match get_top(position, board) {
-        Some(val) => get_right(val, board),
-        None => None,
-    }
+fn get_top_right(position: usize, board: &Board) -> usize {
+    get_right(get_top(position, board), board)
 }
 
-fn get_left(position: usize, board: &Board) -> Option<usize> {
+fn get_left(position: usize, board: &Board) -> usize {
     if position < 1 {
-        return Some(position + (board.width - 1));
+        return position + (board.width - 1);
     }
 
     if (position + 1) % board.width == 1 {
-        return Some(position + (board.width - 1));
+        return position + (board.width - 1);
     }
 
-    Some(position - 1)
+    position - 1
 }
 
-fn get_right(position: usize, board: &Board) -> Option<usize> {
+fn get_right(position: usize, board: &Board) -> usize {
     if position + 1 >= board.width * board.height {
-        return Some((position + 1) - board.width);
+        return (position + 1) - board.width;
     }
 
     if (position + 1) % board.width == 0 {
-        return Some((position + 1) - board.width);
+        return (position + 1) - board.width;
     }
 
-    Some(position + 1)
+    position + 1
 }
 
-fn get_bottom_left(position: usize, board: &Board) -> Option<usize> {
-    match get_left(position, board) {
-        Some(val) => get_bottom(val, board),
-        None => None,
-    }
+fn get_bottom_left(position: usize, board: &Board) -> usize {
+    get_bottom(get_left(position, board), board)
 }
 
-fn get_bottom(position: usize, board: &Board) -> Option<usize> {
+fn get_bottom(position: usize, board: &Board) -> usize {
     if position + board.width >= board.width * board.height {
-        return Some(position - ((board.height - 1) * board.width));
+        return position - ((board.height - 1) * board.width);
     }
 
-    Some(position + board.width)
+    position + board.width
 }
 
-fn get_bottom_right(position: usize, board: &Board) -> Option<usize> {
-    match get_right(position, board) {
-        Some(val) => get_bottom(val, board),
-        None => None,
-    }
+fn get_bottom_right(position: usize, board: &Board) -> usize {
+    get_bottom(get_right(position, board), board)
 }
 
 #[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug)]
@@ -497,9 +460,9 @@ mod tests {
             height: 3,
             width: 2,
         };
-        assert_eq!(Some(0), get_bottom(4, &board));
-        assert_eq!(Some(2), get_bottom(0, &board));
-        assert_eq!(Some(4), get_bottom(2, &board));
+        assert_eq!((0), get_bottom(4, &board));
+        assert_eq!((2), get_bottom(0, &board));
+        assert_eq!((4), get_bottom(2, &board));
     }
 
     #[test]
@@ -509,9 +472,9 @@ mod tests {
             height: 3,
             width: 1,
         };
-        assert_eq!(Some(0), get_top(1, &board));
-        assert_eq!(Some(1), get_top(2, &board));
-        assert_eq!(Some(2), get_top(0, &board));
+        assert_eq!(0, get_top(1, &board));
+        assert_eq!(1, get_top(2, &board));
+        assert_eq!(2, get_top(0, &board));
     }
 
     #[test]
@@ -521,9 +484,9 @@ mod tests {
             height: 1,
             width: 3,
         };
-        assert_eq!(Some(0), get_left(1, &board));
-        assert_eq!(Some(1), get_left(2, &board));
-        assert_eq!(Some(2), get_left(0, &board));
+        assert_eq!(0, get_left(1, &board));
+        assert_eq!(1, get_left(2, &board));
+        assert_eq!(2, get_left(0, &board));
     }
 
     #[test]
@@ -533,9 +496,9 @@ mod tests {
             height: 1,
             width: 3,
         };
-        assert_eq!(Some(0), get_right(2, &board));
-        assert_eq!(Some(1), get_right(0, &board));
-        assert_eq!(Some(2), get_right(1, &board));
+        assert_eq!(0, get_right(2, &board));
+        assert_eq!(1, get_right(0, &board));
+        assert_eq!(2, get_right(1, &board));
     }
 
     #[test]
