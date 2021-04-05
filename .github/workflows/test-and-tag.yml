@@ -139,25 +139,6 @@ jobs:
           fetch-depth: 0
       - uses: chaaz/versio-actions/install@v1.1
         name: Install versio
-      - uses: actions/cache@v2.1.4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.cargo/bin
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions/download-artifact@v2
-      - id: get_current_version
-        run: |
-          echo ::set-output name=VERSION::$(cat ./version/version | cut -c2-)
-          echo ::set-output name=V_VERSION::$(cat ./version/version)
-        shell: bash
-      - uses: ciiiii/toml-editor@1.0.0
-        with:
-          file: "Cargo.toml"
-          key: "package.version"
-          value: ${{ steps.get_current_version.outputs.VERSION }}
       - uses: actions-rs/cargo@v1
         with:
           command: check
@@ -167,7 +148,7 @@ jobs:
         with:
           gpg-private-key: ${{ secrets.SIGNING_KEY_PRIV }}
           passphrase: ${{ secrets.SIGNING_KEY_PASS }}
-          git-tag-gpgsigngpgsign: true
+          git-tag-gpgsign: true
           git-user-signingkey: true
           git-commit-gpgsign: true
       - name: Generate release
