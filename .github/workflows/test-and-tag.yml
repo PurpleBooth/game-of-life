@@ -1,3 +1,4 @@
+name: Test
 "on":
   push:
     branches:
@@ -8,7 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.4
+        name: Checkout the repository
       - uses: actions/cache@v2.1.4
+        name: Cache cargo
         with:
           path: |
             ~/.cargo/registry
@@ -17,53 +20,25 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/audit-check@v1
+        name: Audit check cargo packages
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
   version:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          default: true
-      - uses: actions/checkout@v2.3.4
+      - name: Checkout code
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
-      - uses: actions/cache@v2.1.4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.cargo/bin
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - run: git fetch origin +refs/tags/*:refs/tags/*
-      - id: get_previous_version
-        run: echo ::set-output name=PREVIOUS_VERSION::$(git tag | sort --version-sort | tail -n 1)
-        shell: bash
-      - id: get_last_common_commit
-        run: echo ::set-output name=LAST_COMMON_COMMIT::$(git merge-base "$THIS" "$PREVIOUS_VERSION")
-        shell: bash
+      - uses: chaaz/versio-actions/install@v1.1
+        name: Install versio
+      - name: Check projects
+        run: versio check
+      - name: Print changes
+        run: versio plan
         env:
-          PREVIOUS_VERSION: "${{ steps.get_previous_version.outputs.PREVIOUS_VERSION }}"
-          THIS: "${{ github.sha }}"
-      - uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: what-bump --force
-      - run: mkdir -p ./version
-      - run: |
-          what-bump "${LAST_COMMON_COMMIT}" --from "${PREVIOUS_VERSION:1}" > ./version/no_prefix_version
-          echo "v" > ./version/prefix
-          cat ./version/prefix ./version/no_prefix_version | tr  -d '\n' > ./version/version
-        env:
-          PREVIOUS_VERSION: "${{ steps.get_previous_version.outputs.PREVIOUS_VERSION }}"
-          LAST_COMMON_COMMIT: "${{ steps.get_last_common_commit.outputs.LAST_COMMON_COMMIT }}"
-      - uses: actions/upload-artifact@v2
-        with:
-          name: version
-          path: ./version/version
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USER: ${{ github.actor }}
   check:
     runs-on: ubuntu-latest
     steps:
@@ -149,7 +124,7 @@ jobs:
           # This part is also where you can pass other options, for example:
           prettier_options: --check **/*.{yml,yaml}
   merge-and-push:
-    if: github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Update cargo package version to v')
+    if: github.ref == 'refs/heads/main'
     needs:
       - version
       - test
@@ -162,6 +137,8 @@ jobs:
         with:
           token: "${{ secrets.COMMITTER_TOKEN }}"
           fetch-depth: 0
+      - uses: chaaz/versio-actions/install@v1.1
+        name: Install versio
       - uses: actions/cache@v2.1.4
         with:
           path: |
@@ -193,20 +170,8 @@ jobs:
           git-tag-gpgsigngpgsign: true
           git-user-signingkey: true
           git-commit-gpgsign: true
-      - shell: bash
+      - name: Generate release
+        run: versio release
         env:
-          GITHUB_ACTOR: ${{ github.actor }}
-        run: |
-          git commit -am "fix: Update cargo package version to $(cat ./version/version)"
-          git tag -a -m "Release $(cat ./version/version)" "$(cat ./version/version)"
-          git push --tags
-
-          git checkout -b "release-$(cat ./version/version)"
-          git push -f origin "release-$(cat ./version/version)"
-      - name: pull-request
-        uses: repo-sync/pull-request@v2
-        with:
-          github_token: "${{ secrets.COMMITTER_TOKEN }}"
-          pr_label: "releases"
-          destination_branch: "main"
-          source_branch: "release-${{ steps.get_current_version.outputs.V_VERSION }}"
+          GITHUB_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
+          GITHUB_USER: ${{ github.actor }}

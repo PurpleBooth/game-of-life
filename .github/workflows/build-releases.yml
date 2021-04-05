@@ -1,7 +1,8 @@
+name: Build GitHub Releases
 "on":
   push:
-    tags:
-      - "*"
+    tags-ignore:
+      - "versio-prev"
 jobs:
   build:
     runs-on: "${{ matrix.os }}"
@@ -9,10 +10,13 @@ jobs:
       - run: ${{ matrix.install }}
         env:
           DEBIAN_FRONTEND: noninteractive
+        name: Install additional dependencies
       - uses: actions/checkout@v2.3.4
+        name: Checkout the repository
         with:
           lfs: true
       - uses: actions/cache@v2.1.4
+        name: Cache cargo dependencies
         with:
           key: "${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}"
           path: |
@@ -21,18 +25,22 @@ jobs:
             ~/.cargo/bin
             target
       - uses: actions-rs/toolchain@v1
+        name: Install rust toolchain
         with:
           default: true
           profile: minimal
           toolchain: stable
       - uses: actions-rs/cargo@v1
+        name: Build release version
         with:
           args: "--release --locked"
           command: build
       - id: get_repository_name
+        name: Calculate repository name
         run: 'echo ::set-output name=REPOSITORY_NAME::$(echo "$GITHUB_REPOSITORY" | awk -F / ''{print $2}'' | sed -e "s/:refs//")'
         shell: bash
       - uses: actions/upload-artifact@v2
+        name: Store built version
         with:
           name: ${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}-${{ matrix.target }}
           path: ./target/release/${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}${{ matrix.suffix }}
@@ -57,10 +65,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.4
+        name: Checkout the repository
         with:
           lfs: true
           fetch-depth: 0
       - uses: actions/cache@v2.1.4
+        name: Cache cargo dependencies
         with:
           key: "${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}"
           path: |
@@ -69,37 +79,46 @@ jobs:
             ~/.cargo/bin
             target
       - uses: actions/download-artifact@v2
+        name: Retrieve built binaries
       - uses: actions-rs/toolchain@v1
+        name: Install rust toolchain
         with:
           default: true
           profile: minimal
           toolchain: stable
       - uses: actions-rs/cargo@v1
+        name: Install change log generator
         with:
           command: install
           args: clog-cli
       - id: get_previous_version
-        run: echo ::set-output name=PREVIOUS_VERSION::$(git tag | sort --version-sort | tail -n 2 | head -n 1)
+        name: Calculate previous version
+        run: echo ::set-output name=PREVIOUS_VERSION::$(git tag | sort --version-sort | tail -n 3 | head -n 1)
         shell: bash
       - uses: actions-rs/cargo@v1
+        name: Install TOML Reader
         with:
           args: toml-cli
           command: install
       - id: get_repository_name
+        name: Calculate repository name
         run: 'echo ::set-output name=REPOSITORY_NAME::$(echo "$GITHUB_REPOSITORY" | awk -F / ''{print $2}'' | sed -e "s/:refs//")'
         shell: bash
       - id: get_version
+        name: Calculate current version number
         run: "echo ::set-output name=VERSION::v$(toml get Cargo.toml package.version | tail -c +2 | head -c -2)"
         shell: bash
       - run: |
           clog --from "$PREVIOUS_VERSION" --to "$VERSION" > CHANGELOG.md
         shell: bash
+        name: Generate change log
         env:
           PREVIOUS_VERSION: "${{ steps.get_previous_version.outputs.PREVIOUS_VERSION }}"
           VERSION: "${{ steps.get_version.outputs.VERSION }}"
       - env:
           GITHUB_TOKEN: "${{ secrets.COMMITTER_TOKEN }}"
         id: create_release
+        name: Create GitHub Release
         uses: actions/create-release@v1.1.4
         with:
           draft: false
@@ -108,6 +127,7 @@ jobs:
           release_name: "Release ${{ steps.get_version.outputs.VERSION }}"
           tag_name: "${{ steps.get_version.outputs.VERSION }}"
       - uses: actions/upload-release-asset@v1.0.2
+        name: Upload x86_64-unknown-linux-gnu binaries to release
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         with:
@@ -116,6 +136,7 @@ jobs:
           asset_name: ${{ steps.get_repository_name.outputs.REPOSITORY_NAME }}-x86_64-unknown-linux-gnu
           asset_content_type: application/octet-stream
       - uses: actions/upload-release-asset@v1.0.2
+        name: Upload x86_64-apple-darwin binaries to release
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         with:
@@ -125,6 +146,7 @@ jobs:
           asset_content_type: application/octet-stream
       - env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        name: Upload x86_64-pc-windows-msvc binaries to release
         uses: actions/upload-release-asset@v1.0.2
         with:
           asset_content_type: application/octet-stream

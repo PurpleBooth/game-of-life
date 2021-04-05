@@ -1,0 +1,20 @@
+options:
+  prev_tag: "versio-prev"
+
+projects:
+  - name: "game-of-life"
+    id: 1
+    tag_prefix: ""
+    labels: cargo
+    version:
+      file: "Cargo.toml"
+      toml: "package.version"
+    hooks:
+      post_write: 'cargo fetch'
+
+sizes:
+  major: ["!"]
+  minor: ["feat"]
+  patch: ["fix", "docs", "style", "refactor", "perf", "test", "chore", "build", "ci"]
+  none: []
+  fail: ["*"]
