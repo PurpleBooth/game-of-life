@@ -1,158 +1,159 @@
 name: Test
-"on":
+on:
   push:
     branches:
-      - "*"
-  pull_request: null
+    - '*'
+  pull_request:
 jobs:
   security-audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
-        name: Checkout the repository
-      - uses: actions/cache@v2.1.4
-        name: Cache cargo
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.cargo/bin
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/audit-check@v1
-        name: Audit check cargo packages
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@v2.3.4
+      name: Checkout the repository
+    - uses: actions/cache@v2.1.4
+      name: Cache cargo
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          ~/.cargo/bin
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - uses: actions-rs/audit-check@v1
+      name: Audit check cargo packages
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
   version:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2.3.4
-        with:
-          fetch-depth: 0
-      - uses: chaaz/versio-actions/install@v1.1
-        name: Install versio
-      - name: Check projects
-        run: versio check
-      - name: Print changes
-        run: versio plan
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_USER: ${{ github.actor }}
+    - name: Checkout code
+      uses: actions/checkout@v2.3.4
+      with:
+        fetch-depth: 0
+    - uses: chaaz/versio-actions/install@v1.1
+      name: Install versio
+    - name: Check projects
+      run: versio check
+    - name: Print changes
+      run: versio plan
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_USER: ${{ github.actor }}
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
-      - uses: actions/cache@v2.1.4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.cargo/bin
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          default: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: check
+    - uses: actions/checkout@v2.3.4
+    - uses: actions/cache@v2.1.4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          ~/.cargo/bin
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        default: true
+    - uses: actions-rs/cargo@v1
+      with:
+        command: check
   test:
-    runs-on: "${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          - os: macos-latest
-            install: echo nothing-to-install
-          - os: ubuntu-latest
-            install: sudo apt-get install -y libxcb-shape0-dev libxcb-xfixes0-dev
-          - os: windows-latest
-            install: echo nothing-to-install
+        - os: macos-latest
+          install: echo nothing-to-install
+        - os: ubuntu-latest
+          install: sudo apt-get install -y libxcb-shape0-dev libxcb-xfixes0-dev
+        - os: windows-latest
+          install: echo nothing-to-install
     steps:
-      - run: ${{ matrix.install }}
-        env:
-          DEBIAN_FRONTEND: noninteractive
-      - uses: actions/checkout@v2.3.4
-      - uses: actions/cache@v2.1.4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.cargo/bin
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          default: true
-      - uses: actions-rs/cargo@v1
-        with:
-          args: " --locked"
-          command: test
+    - run: ${{ matrix.install }}
+      env:
+        DEBIAN_FRONTEND: noninteractive
+    - uses: actions/checkout@v2.3.4
+    - uses: actions/cache@v2.1.4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          ~/.cargo/bin
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        default: true
+    - uses: actions-rs/cargo@v1
+      with:
+        args: ' --locked'
+        command: test
   lints:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
-      - uses: actions/cache@v2.1.4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.cargo/bin
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          default: true
-          components: "rustfmt, clippy"
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: "--all -- --check"
-      - uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: "--all-targets --all-features -- -D warnings -Dclippy::all -D clippy::pedantic -D clippy::cargo -A clippy::multiple-crate-versions"
-      - name: Prettify code
-        uses: creyD/prettier_action@v3.3
-        with:
+    - uses: actions/checkout@v2.3.4
+    - uses: actions/cache@v2.1.4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          ~/.cargo/bin
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        default: true
+        components: rustfmt, clippy
+    - uses: actions-rs/cargo@v1
+      with:
+        command: fmt
+        args: --all -- --check
+    - uses: actions-rs/cargo@v1
+      with:
+        command: clippy
+        args: --all-targets --all-features -- -D warnings -Dclippy::all -D clippy::pedantic
+          -D clippy::cargo -A clippy::multiple-crate-versions
+    - name: Prettify code
+      uses: creyD/prettier_action@v3.3
+      with:
           # This part is also where you can pass other options, for example:
-          prettier_options: --check **/*.{yml,yaml}
+        prettier_options: --check **/*.{yml,yaml}
   merge-and-push:
     if: github.ref == 'refs/heads/main'
     needs:
-      - version
-      - test
-      - lints
-      - check
-      - security-audit
+    - version
+    - test
+    - lints
+    - check
+    - security-audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
-        with:
-          token: "${{ secrets.COMMITTER_TOKEN }}"
-          fetch-depth: 0
-      - uses: chaaz/versio-actions/install@v1.1
-        name: Install versio
-      - uses: actions-rs/cargo@v1
-        with:
-          command: check
-      - name: Import GPG key
-        id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v3
-        with:
-          gpg-private-key: ${{ secrets.SIGNING_KEY_PRIV }}
-          passphrase: ${{ secrets.SIGNING_KEY_PASS }}
-          git-tag-gpgsign: true
-          git-user-signingkey: true
-          git-commit-gpgsign: true
-      - name: Generate release
-        run: versio release
-        env:
-          GITHUB_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
-          GITHUB_USER: ${{ github.actor }}
+    - uses: actions/checkout@v2.3.4
+      with:
+        token: ${{ secrets.COMMITTER_TOKEN }}
+        fetch-depth: 0
+    - uses: chaaz/versio-actions/install@v1.1
+      name: Install versio
+    - uses: actions-rs/cargo@v1
+      with:
+        command: check
+    - name: Import GPG key
+      id: import_gpg
+      uses: crazy-max/ghaction-import-gpg@v3
+      with:
+        gpg-private-key: ${{ secrets.SIGNING_KEY_PRIV }}
+        passphrase: ${{ secrets.SIGNING_KEY_PASS }}
+        git-tag-gpgsign: true
+        git-user-signingkey: true
+        git-commit-gpgsign: true
+    - name: Generate release
+      run: versio release
+      env:
+        GITHUB_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
+        GITHUB_USER: ${{ github.actor }}
