@@ -86,11 +86,6 @@ jobs:
           default: true
           profile: minimal
           toolchain: stable
-      - uses: actions-rs/cargo@v1
-        name: Install change log generator
-        with:
-          command: install
-          args: clog-cli
       - id: get_previous_version
         name: Calculate previous version
         run: echo ::set-output name=PREVIOUS_VERSION::$(git tag | sort --version-sort | tail -n 3 | head -n 1)
@@ -108,24 +103,23 @@ jobs:
         name: Calculate current version number
         run: "echo ::set-output name=VERSION::v$(toml get Cargo.toml package.version | tail -c +2 | head -c -2)"
         shell: bash
-      - run: |
-          clog --from "$PREVIOUS_VERSION" --to "$VERSION" > CHANGELOG.md
-        shell: bash
+      - uses: dlavrenuek/conventional-changelog-action@v1.1.1
         name: Generate change log
-        env:
-          PREVIOUS_VERSION: "${{ steps.get_previous_version.outputs.PREVIOUS_VERSION }}"
-          VERSION: "${{ steps.get_version.outputs.VERSION }}"
+        id: changelog
+        with:
+          from: ${{ steps.get_previous_version.outputs.PREVIOUS_VERSION }}
+          to: ${{ steps.get_version.outputs.VERSION }}
       - env:
-          GITHUB_TOKEN: "${{ secrets.COMMITTER_TOKEN }}"
+          GITHUB_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
         id: create_release
         name: Create GitHub Release
         uses: actions/create-release@v1.1.4
         with:
           draft: false
           prerelease: false
-          body_path: ./CHANGELOG.md
-          release_name: "Release ${{ steps.get_version.outputs.VERSION }}"
-          tag_name: "${{ steps.get_version.outputs.VERSION }}"
+          body: ${{ steps.changelog.outputs.body }}
+          release_name: Release ${{ steps.get_version.outputs.VERSION }}
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
       - uses: actions/upload-release-asset@v1.0.2
         name: Upload x86_64-unknown-linux-gnu binaries to release
         env:
