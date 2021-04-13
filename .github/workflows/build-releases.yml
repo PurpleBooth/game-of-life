@@ -15,7 +15,7 @@ jobs:
       name: Checkout the repository
       with:
         lfs: true
-    - uses: actions/cache@v2.1.4
+    - uses: actions/cache@v2.1.5
       name: Cache cargo dependencies
       with:
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
@@ -72,7 +72,7 @@ jobs:
       with:
         lfs: true
         fetch-depth: 0
-    - uses: actions/cache@v2.1.4
+    - uses: actions/cache@v2.1.5
       name: Cache cargo dependencies
       with:
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
