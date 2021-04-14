@@ -13,8 +13,6 @@ projects:
     post_write: cargo fetch
 
 sizes:
-  major: ['!']
-  minor: [feat]
-  patch: [fix, docs, style, refactor, perf, test, chore, build, ci]
-  none: []
-  fail: ['*']
+  none: [ci]
+  use_angular: true
+
