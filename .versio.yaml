@@ -13,7 +13,6 @@ projects:
     post_write: cargo fetch
 
 sizes:
-  patch: ["-"]
-  none: [ci]
+  none: [ci, "-"]
   use_angular: true
 
