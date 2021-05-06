@@ -151,15 +151,6 @@ jobs:
     - uses: actions-rs/cargo@v1
       with:
         command: check
-    - name: Import GPG key
-      id: import_gpg
-      uses: crazy-max/ghaction-import-gpg@v3
-      with:
-        gpg-private-key: ${{ secrets.SIGNING_KEY_PRIV }}
-        passphrase: ${{ secrets.SIGNING_KEY_PASS }}
-        git-tag-gpgsign: true
-        git-user-signingkey: true
-        git-commit-gpgsign: true
     - run: echo ::set-output "name=BUMP::$( versio release --dry-run )"
       id: get_versio_plan
       env:
