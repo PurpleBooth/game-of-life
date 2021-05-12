@@ -30,7 +30,7 @@ jobs:
         default: true
         profile: minimal
         toolchain: stable
-    - uses: actions-rs/cargo@v1
+    - uses: actions-rs/cargo@v1.0.3
       name: Build release version
       with:
         args: --release --locked
@@ -94,7 +94,7 @@ jobs:
       run: echo ::set-output name=PREVIOUS_VERSION::$(git tag | sort --version-sort
         | tail -n 3 | head -n 1)
       shell: bash
-    - uses: actions-rs/cargo@v1
+    - uses: actions-rs/cargo@v1.0.3
       name: Install TOML Reader
       with:
         args: toml-cli
