@@ -24,7 +24,7 @@ jobs:
           ~/.cargo/git
           ~/.cargo/bin
           target
-    - uses: actions-rs/toolchain@v1
+    - uses: actions-rs/toolchain@v1.0.7
       name: Install rust toolchain
       with:
         default: true
@@ -83,7 +83,7 @@ jobs:
           target
     - uses: actions/download-artifact@v2
       name: Retrieve built binaries
-    - uses: actions-rs/toolchain@v1
+    - uses: actions-rs/toolchain@v1.0.7
       name: Install rust toolchain
       with:
         default: true
