@@ -19,7 +19,7 @@ jobs:
           ~/.cargo/bin
           target
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    - uses: actions-rs/audit-check@v1
+    - uses: actions-rs/audit-check@v1.2.0
       name: Audit check cargo packages
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
