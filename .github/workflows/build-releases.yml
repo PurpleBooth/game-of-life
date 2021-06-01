@@ -109,7 +109,7 @@ jobs:
       run: echo ::set-output name=VERSION::v$(toml get Cargo.toml package.version
         | tail -c +2 | head -c -2)
       shell: bash
-    - uses: dlavrenuek/conventional-changelog-action@v1.1.1
+    - uses: dlavrenuek/conventional-changelog-action@v1.1.2
       name: Generate change log
       id: changelog
       with:
