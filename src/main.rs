@@ -60,7 +60,7 @@ fn main() -> Result<()> {
 
     let size = size()?;
     for _ in 0..(size.0 * (size.1)) {
-        cells.push(if rng.gen::<bool>() { Alive } else { Dead })
+        cells.push(if rng.gen::<bool>() { Alive } else { Dead });
     }
 
     let mut current_state = Board {
@@ -78,7 +78,7 @@ fn main() -> Result<()> {
     println!("{} {}", args[0], seed);
     // Draw space for the board
     for _ in 0..current_state.height {
-        queue!(stdout(), Print("\n"),)?
+        queue!(stdout(), Print("\n"),)?;
     }
 
     while match &mut loop_range {
@@ -154,7 +154,7 @@ fn draw_board(board: &Board, rng: &mut StdRng) -> Result<()> {
 
         if position + 1 != board.width * board.height && position % board.width == (board.width - 1)
         {
-            queue!(stdout(), Print("\n"),)?
+            queue!(stdout(), Print("\n"),)?;
         }
     }
 
@@ -168,9 +168,9 @@ fn next_board_state(board: &Board) -> Board {
     let mut new_cells: Vec<LifeState> = vec![];
 
     for position in 0..cells_in_board {
-        let neighbours = neighbours(position, &board);
+        let neighbours = neighbours(position, board);
         let new_cell = next_cell_state(board.cells[position], neighbours);
-        new_cells.push(new_cell)
+        new_cells.push(new_cell);
     }
 
     Board {
@@ -218,14 +218,14 @@ fn next_cell_state(current: LifeState, neighbours: Neighbours) -> LifeState {
 
 fn neighbours(position: usize, board: &Board) -> Neighbours {
     (
-        board.cells[get_top_left(position, &board)],
-        board.cells[get_top(position, &board)],
-        board.cells[get_top_right(position, &board)],
-        board.cells[get_left(position, &board)],
-        board.cells[get_right(position, &board)],
-        board.cells[get_bottom_left(position, &board)],
-        board.cells[get_bottom(position, &board)],
-        board.cells[get_bottom_right(position, &board)],
+        board.cells[get_top_left(position, board)],
+        board.cells[get_top(position, board)],
+        board.cells[get_top_right(position, board)],
+        board.cells[get_left(position, board)],
+        board.cells[get_right(position, board)],
+        board.cells[get_bottom_left(position, board)],
+        board.cells[get_bottom(position, board)],
+        board.cells[get_bottom_right(position, board)],
     )
 }
 
@@ -374,7 +374,7 @@ mod tests {
         assert_eq!(
             LifeState::Dead,
             next_cell_state(Dead, (Alive, Dead, Dead, Dead, Dead, Dead, Dead, Dead))
-        )
+        );
     }
 
     #[test]
@@ -390,7 +390,7 @@ mod tests {
         assert_eq!(
             LifeState::Dead,
             next_cell_state(Dead, (Alive, Alive, Dead, Dead, Dead, Dead, Dead, Dead))
-        )
+        );
     }
 
     #[test]
