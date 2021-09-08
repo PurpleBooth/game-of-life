@@ -2,17 +2,16 @@ options:
   prev_tag: versio-prev
 
 projects:
-- name: game-of-life
-  id: 1
-  tag_prefix: ''
-  labels: cargo
-  version:
-    file: Cargo.toml
-    toml: package.version
-  hooks:
-    post_write: cargo fetch
+  - name: game-of-life
+    id: 1
+    tag_prefix: ""
+    labels: cargo
+    version:
+      file: Cargo.toml
+      toml: package.version
+    hooks:
+      post_write: cargo fetch
 
 sizes:
   none: [ci, "-"]
   use_angular: true
-
