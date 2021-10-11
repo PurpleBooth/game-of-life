@@ -2,156 +2,59 @@ name: Test
 on:
   push:
     branches:
-      - "*"
+    - '*'
   pull_request:
+  workflow_dispatch:
 jobs:
-  security-audit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2.3.4
-        name: Checkout the repository
-      - uses: actions/cache@v2.1.6
-        name: Cache cargo
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.cargo/bin
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/audit-check@v1.2.0
-        name: Audit check cargo packages
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-  version:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2.3.4
-        with:
-          fetch-depth: 0
-      - uses: chaaz/versio-actions/install@v1.2
-        name: Install versio
-      - name: Check projects
-        run: versio check
-      - name: Print changes
-        run: versio plan
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_USER: ${{ github.actor }}
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2.3.4
-      - uses: actions/cache@v2.1.6
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.cargo/bin
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          profile: minimal
-          toolchain: stable
-          default: true
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: check
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: macos-latest
-            install: echo nothing-to-install
-          - os: ubuntu-latest
-            install: sudo apt-get install -y libxcb-shape0-dev libxcb-xfixes0-dev
-          - os: windows-latest
-            install: echo nothing-to-install
-    steps:
-      - run: ${{ matrix.install }}
-        env:
-          DEBIAN_FRONTEND: noninteractive
-      - uses: actions/checkout@v2.3.4
-      - uses: actions/cache@v2.1.6
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.cargo/bin
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          profile: minimal
-          toolchain: stable
-          default: true
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          args: " --locked"
-          command: test
-  lints:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2.3.4
-      - uses: actions/cache@v2.1.6
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.cargo/bin
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          profile: minimal
-          toolchain: stable
-          default: true
-          components: rustfmt, clippy
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: fmt
-          args: --all -- --check
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: clippy
-          args:
-            --all-targets --all-features -- -D warnings -Dclippy::all -D clippy::pedantic
-            -D clippy::cargo -A clippy::multiple-crate-versions
-      - name: Prettify code
-        uses: creyD/prettier_action@v4.0
-        with:
-          # This part is also where you can pass other options, for example:
-          prettier_options: --check **/*.{yml,yaml}
-  merge-and-push:
+  lint-markdown:
+    uses: PurpleBooth/common-pipelines/.github/workflows/markdown-check.yml@main
+  commit-checks:
+    uses: PurpleBooth/common-pipelines/.github/workflows/commit-check.yml@main
+  rust-checks:
+    uses: PurpleBooth/common-pipelines/.github/workflows/rust-check.yml@main
+
+  release:
     if: github.ref == 'refs/heads/main'
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_USER: ${{ github.actor }}
     needs:
-      - version
-      - test
-      - lints
-      - check
-      - security-audit
+    - commit-checks
+    - lint-markdown
+    - rust-checks
+    outputs:
+      version_bump: ${{ steps.version_bump.outputs.version_bump }}
+      current_version: ${{ steps.current_version.outputs.current_version }}
+      previous_version: ${{ steps.previous_version.outputs.previous_version }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
-        with:
-          token: ${{ secrets.COMMITTER_TOKEN }}
-          fetch-depth: 0
-      - uses: chaaz/versio-actions/install@v1.2
-        name: Install versio
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: check
-      - run: echo ::set-output "name=BUMP::$( versio release --dry-run )"
-        id: get_versio_plan
-        env:
-          GITHUB_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
-          GITHUB_USER: ${{ github.actor }}
-      - name: Generate release
-        if: ${{ contains(steps.get_versio_plan.outputs.BUMP, ' -> ') }}
-        run: versio release
-        env:
-          GITHUB_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
-          GITHUB_USER: ${{ github.actor }}
+    - uses: actions/checkout@v2.3.4
+      with:
+        fetch-depth: 0
+    - uses: chaaz/versio-actions/install@v1.2
+      name: Install versio
+    - id: previous_version
+      run: echo ::set-output "name=previous_version::$( versio get --id 1 -v )"
+    - run: echo ::set-output "name=BUMP::$( versio release --dry-run )"
+      id: get_versio_plan
+    - name: Generate release
+      if: ${{ contains(steps.get_versio_plan.outputs.BUMP, ' -> ') }}
+      run: |
+        versio release
+    - run: echo ::set-output "name=current_version::$( versio get --id 1 -v )"
+      id: current_version
+    - run: echo ::set-output "name=version_bump::true"
+      if: steps.current_version.outputs.current_version != steps.previous_version.outputs.previous_version
+      id: version_bump
+
+  release-binary:
+    if: needs.release.outputs.version_bump
+    needs:
+    - release
+    uses: PurpleBooth/common-pipelines/.github/workflows/release-rust-binary.yml@main
+    with:
+      current_version: ${{ needs.release.outputs.current_version }}
+    secrets:
+      committer_token: ${{ secrets.COMMITTER_TOKEN }}
+      gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+      gpg_passphrase: ${{ secrets.GPG_PASSPHRASE }}

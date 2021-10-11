@@ -229,11 +229,11 @@ fn neighbours(position: usize, board: &Board) -> Neighbours {
     )
 }
 
-fn get_top_left(position: usize, board: &Board) -> usize {
+const fn get_top_left(position: usize, board: &Board) -> usize {
     get_left(get_top(position, board), board)
 }
 
-fn get_top(position: usize, board: &Board) -> usize {
+const fn get_top(position: usize, board: &Board) -> usize {
     if position < board.width {
         return position + (board.width * (board.height - 1));
     }
@@ -241,11 +241,11 @@ fn get_top(position: usize, board: &Board) -> usize {
     position - board.width
 }
 
-fn get_top_right(position: usize, board: &Board) -> usize {
+const fn get_top_right(position: usize, board: &Board) -> usize {
     get_right(get_top(position, board), board)
 }
 
-fn get_left(position: usize, board: &Board) -> usize {
+const fn get_left(position: usize, board: &Board) -> usize {
     if position < 1 {
         return position + (board.width - 1);
     }
@@ -257,7 +257,7 @@ fn get_left(position: usize, board: &Board) -> usize {
     position - 1
 }
 
-fn get_right(position: usize, board: &Board) -> usize {
+const fn get_right(position: usize, board: &Board) -> usize {
     if position + 1 >= board.width * board.height {
         return (position + 1) - board.width;
     }
@@ -269,11 +269,11 @@ fn get_right(position: usize, board: &Board) -> usize {
     position + 1
 }
 
-fn get_bottom_left(position: usize, board: &Board) -> usize {
+const fn get_bottom_left(position: usize, board: &Board) -> usize {
     get_bottom(get_left(position, board), board)
 }
 
-fn get_bottom(position: usize, board: &Board) -> usize {
+const fn get_bottom(position: usize, board: &Board) -> usize {
     if position + board.width >= board.width * board.height {
         return position - ((board.height - 1) * board.width);
     }
@@ -281,7 +281,7 @@ fn get_bottom(position: usize, board: &Board) -> usize {
     position + board.width
 }
 
-fn get_bottom_right(position: usize, board: &Board) -> usize {
+const fn get_bottom_right(position: usize, board: &Board) -> usize {
     get_bottom(get_right(position, board), board)
 }
 
