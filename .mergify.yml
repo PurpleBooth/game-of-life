@@ -4,7 +4,6 @@ queue_rules:
   batch_size: 20
   conditions:
   - check-success~=^commit-checks /
-  - check-success~=^specdown /
   - check-success~=^lint-markdown /
   - check-success~=^rust-checks /
 
@@ -20,7 +19,6 @@ pull_request_rules:
 - name: automatic rebase for dependencies
   conditions:
   - check-success~=^commit-checks /
-  - check-success~=^specdown /
   - check-success~=^lint-markdown /
   - check-success~=^rust-checks /
   - base=main
