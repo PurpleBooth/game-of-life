@@ -7,11 +7,11 @@ on:
   workflow_dispatch:
 jobs:
   lint-markdown:
-    uses: PurpleBooth/common-pipelines/.github/workflows/markdown-check.yml@v0.2.0
+    uses: PurpleBooth/common-pipelines/.github/workflows/markdown-check.yml@main
   commit-checks:
-    uses: PurpleBooth/common-pipelines/.github/workflows/commit-check.yml@v0.2.0
+    uses: PurpleBooth/common-pipelines/.github/workflows/commit-check.yml@main
   rust-checks:
-    uses: PurpleBooth/common-pipelines/.github/workflows/rust-check.yml@v0.2.0
+    uses: PurpleBooth/common-pipelines/.github/workflows/rust-check.yml@main
   release:
     if: github.ref == 'refs/heads/main'
     needs:
@@ -31,7 +31,7 @@ jobs:
     if: needs.release.outputs.version_bump
     needs:
     - release
-    uses: PurpleBooth/common-pipelines/.github/workflows/release-rust-binary.yml@v0.2.0
+    uses: PurpleBooth/common-pipelines/.github/workflows/release-rust-binary.yml@main
     with:
       current_version: ${{ needs.release.outputs.current_version }}
       previous_version: ${{ needs.release.outputs.previous_version }}
