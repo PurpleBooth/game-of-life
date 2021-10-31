@@ -1,5 +1,15 @@
-extern crate crossterm;
-extern crate retry;
+//! Implementation of the game of life
+
+#![warn(
+    rust_2018_idioms,
+    unused,
+    rust_2021_compatibility,
+    nonstandard_style,
+    future_incompatible,
+    missing_copy_implementations,
+    missing_debug_implementations,
+    missing_docs
+)]
 
 use std::ops::Range;
 use std::str::FromStr;
