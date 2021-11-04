@@ -6,7 +6,7 @@ queue_rules:
   - check-success~=^commit-checks /
   - check-success~=^lint-markdown /
   - check-success~=^rust-checks /
-  - '#checck-pending=0'
+  - '#check-pending=0'
   - '#check-success>=3'
 
 pull_request_rules:
