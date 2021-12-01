@@ -76,7 +76,7 @@ dependencies = [
 
 [[package]]
 name = "game-of-life"
-version = "1.53.44"
+version = "1.53.45"
 dependencies = [
  "clap",
  "crossterm",
