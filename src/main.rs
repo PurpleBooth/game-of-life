@@ -47,15 +47,15 @@ fn main() -> Result<()> {
         .author(crate_authors!())
         .about(crate_description!())
         .arg(
-            Arg::with_name("seed")
+            Arg::new("seed")
                 .help("(Optional) Provide this to rerun a previous configuration")
                 .index(1)
                 .required(false),
         )
         .arg(
-            Arg::with_name("max-steps")
+            Arg::new("max-steps")
                 .long("max-steps")
-                .short("s")
+                .short('s')
                 .help("Stop after a number of steps")
                 .required(false)
                 .takes_value(true),
