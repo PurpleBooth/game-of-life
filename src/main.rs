@@ -21,7 +21,7 @@ use std::{
     thread, time,
 };
 
-use clap::{crate_authors, crate_description, crate_name, crate_version, App, Arg};
+use clap::{crate_authors, crate_description, crate_name, crate_version, Arg, Command};
 use crossterm::{
     cursor, queue,
     style::{Color, Print, ResetColor, SetBackgroundColor, SetForegroundColor},
@@ -42,7 +42,7 @@ enum NumberOfSteps {
 }
 
 fn main() -> Result<()> {
-    let matches = App::new(crate_name!())
+    let matches = Command::new(crate_name!())
         .version(crate_version!())
         .author(crate_authors!())
         .about(crate_description!())
