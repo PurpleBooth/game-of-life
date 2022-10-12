@@ -85,7 +85,7 @@ fn main() -> Result<()> {
     };
 
     println!("To recreate run:");
-    println!("{} {}", args[0], seed);
+    println!("{} {seed}", args[0]);
     // Draw space for the board
     for _ in 0..current_state.height {
         queue!(stdout(), Print("\n"),)?;
@@ -159,7 +159,7 @@ fn draw_board(board: &Board, rng: &mut StdRng) -> Result<()> {
                 SetBackgroundColor(Color::Black),
                 Print(" "),
             )?,
-            None => return Err(Box::from(format!("Cell {} not found", position))),
+            None => return Err(Box::from(format!("Cell {position} not found"))),
         }
 
         if position + 1 != board.width * board.height && position % board.width == (board.width - 1)
