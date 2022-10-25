@@ -13,5 +13,5 @@ categories = [ "command-line-utilities", "games", "visualization" ]
 [dependencies]
 crossterm = "0.25.0"
 rand = "0.8.5"
-clap = { version = "3.2.22", features = ["derive", "cargo", "wrap_help", "yaml", "env", "unicode" ] }
+clap = { version = "3.2.23", features = ["derive", "cargo", "wrap_help", "yaml", "env", "unicode" ] }
 retry = "2.0.0"
