@@ -11,8 +11,10 @@
     missing_docs
 )]
 
+use clap::Parser;
+
 use std::ops::Range;
-use std::str::FromStr;
+
 use std::{
     borrow::BorrowMut,
     convert::TryFrom,
@@ -21,7 +23,6 @@ use std::{
     thread, time,
 };
 
-use clap::{crate_authors, crate_description, crate_name, crate_version, Arg, Command};
 use crossterm::{
     cursor, queue,
     style::{Color, Print, ResetColor, SetBackgroundColor, SetForegroundColor},
@@ -41,30 +42,23 @@ enum NumberOfSteps {
     Limited(Range<usize>),
 }
 
-fn main() -> Result<()> {
-    let matches = Command::new(crate_name!())
-        .version(crate_version!())
-        .author(crate_authors!())
-        .about(crate_description!())
-        .arg(
-            Arg::new("seed")
-                .help("(Optional) Provide this to rerun a previous configuration")
-                .index(1)
-                .required(false),
-        )
-        .arg(
-            Arg::new("max-steps")
-                .long("max-steps")
-                .short('s')
-                .help("Stop after a number of steps")
-                .required(false)
-                .takes_value(true),
-        )
-        .get_matches();
+/// Simple program to greet a person
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Provide this to rerun a previous configuration
+    seed: Option<u64>,
 
+    /// Stop after a number of steps
+    #[arg(short = 's', long)]
+    max_steps: Option<usize>,
+}
+
+fn main() -> Result<()> {
+    let cli = Args::parse();
     let args: Vec<String> = env::args().collect();
 
-    let seed = generate_seed(matches.value_of("seed")).expect("failed to generate seed");
+    let seed = generate_seed(cli.seed).expect("failed to generate seed");
     let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
     let mut cells: Vec<LifeState> = vec![];
 
@@ -79,8 +73,8 @@ fn main() -> Result<()> {
         cells,
     };
 
-    let mut loop_range = match matches.value_of("max-steps") {
-        Some(max_steps) => NumberOfSteps::Limited(0_usize..usize::from_str(max_steps)?),
+    let mut loop_range = match cli.max_steps {
+        Some(max_steps) => NumberOfSteps::Limited(0_usize..max_steps),
         None => NumberOfSteps::Infinite,
     };
 
@@ -104,20 +98,18 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn generate_seed(seed: Option<&str>) -> Option<u64> {
-    seed.map(str::parse::<u64>)
-        .map(|x: std::result::Result<u64, std::num::ParseIntError>| x.map_err(Box::from))
-        .and_then(Result::ok)
-        .or_else(|| {
-            retry(
-                Fixed::from_millis(100).take(50),
-                || match rand::thread_rng().gen() {
-                    Some(n) => Ok(n),
-                    None => Err("No seed generated"),
-                },
-            )
-            .ok()
-        })
+fn generate_seed(seed: Option<u64>) -> Option<u64> {
+    match seed {
+        None => retry(
+            Fixed::from_millis(100).take(50),
+            || match rand::thread_rng().gen() {
+                Some(n) => Ok(n),
+                None => Err("No seed generated"),
+            },
+        )
+        .ok(),
+        seeded => seeded,
+    }
 }
 
 fn draw_board(board: &Board, rng: &mut StdRng) -> Result<()> {
