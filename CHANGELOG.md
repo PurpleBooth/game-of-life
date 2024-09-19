@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## v1.53.79 - 2024-09-19
+#### Bug Fixes
+- **(deps)** update rust crate clap to 4.5.17 - (198e7a9) - renovate[bot]
+
+- - -
+
 ## v1.53.78 - 2024-09-19
 #### Bug Fixes
 - test deploy - (858b267) - Billie Thompson
