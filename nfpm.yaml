@@ -1,0 +1,18 @@
+# nfpm example configuration file
+#
+# check https://nfpm.goreleaser.com/configuration for detailed usage
+#
+name: "game-of-life"
+arch: "${GOARCH}"
+platform: "linux"
+version: "${VER}"
+section: "default"
+priority: "extra"
+maintainer: "Billie Thompson <billie@billiecodes.com>"
+description: "PurpleBooth's implementation of Conway's Game of life"
+vendor: "PurpleBooth"
+homepage: "https://github.com/PurpleBooth/game-of-life"
+license: "CC0"
+contents:
+  - src: ./game-of-life
+    dst: /usr/bin/game-of-life
