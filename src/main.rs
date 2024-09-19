@@ -29,8 +29,6 @@ use crossterm::{
     terminal::size,
 };
 use rand::prelude::*;
-use retry::delay::Fixed;
-use retry::retry;
 
 use crate::LifeState::{Alive, Dead};
 
@@ -100,14 +98,7 @@ fn main() -> Result<()> {
 
 fn generate_seed(seed: Option<u64>) -> Option<u64> {
     match seed {
-        None => retry(
-            Fixed::from_millis(100).take(50),
-            || match rand::thread_rng().gen() {
-                Some(n) => Ok(n),
-                None => Err("No seed generated"),
-            },
-        )
-        .ok(),
+        None => random::<Option<u64>>().ok_or("No seed generated").ok(),
         seeded => seeded,
     }
 }
@@ -123,7 +114,7 @@ fn draw_board(board: &Board, rng: &mut StdRng) -> Result<()> {
 
     let cells_in_board = board.cells.len();
     for position in 0..cells_in_board {
-        let colours = vec![
+        let colours = [
             Color::DarkGrey,
             Color::DarkRed,
             Color::Green,
@@ -183,7 +174,7 @@ fn next_board_state(board: &Board) -> Board {
 }
 
 fn next_cell_state(current: LifeState, neighbours: Neighbours) -> LifeState {
-    let neighbour_vec = vec![
+    let neighbour_vec = [
         neighbours.0,
         neighbours.1,
         neighbours.2,
