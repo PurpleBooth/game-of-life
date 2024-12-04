@@ -2,6 +2,24 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## v1.53.80 - 2024-12-04
+#### Bug Fixes
+- **(deps)** update rust crate clap to v4.5.22 (#238) - (fcdaafb) - renovate[bot]
+#### Build system
+- Homebrew syntax - (5e72c36) - Billie Thompson
+#### Continuous Integration
+- remove unused dependabot file - (a973d99) - Billie Thompson
+- edge from main - (b542136) - Billie Thompson
+#### Miscellaneous Chores
+- **(deps)** update rust:alpine docker digest to 838d384 - (10eac42) - renovate[bot]
+- **(deps)** update goreleaser/nfpm docker digest to ae35b40 - (fac4ba5) - renovate[bot]
+- **(deps)** update rust:alpine docker digest to 2f42ce0 - (06da53a) - renovate[bot]
+- **(deps)** update rust:alpine docker digest to 00c2107 - (faed085) - renovate[bot]
+- **(deps)** update goreleaser/nfpm docker digest to bf713f8 - (a4bcc10) - renovate[bot]
+- **(deps)** update rust:alpine docker digest to 466dc99 - (7bf386c) - renovate[bot]
+
+- - -
+
 ## v1.53.79 - 2024-09-19
 #### Bug Fixes
 - **(deps)** update rust crate clap to 4.5.17 - (198e7a9) - renovate[bot]
