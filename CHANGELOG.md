@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## v1.53.82 - 2025-01-27
+#### Bug Fixes
+- **(deps)** update rust crate clap to v4.5.27 (#244) - (fd49887) - renovate[bot]
+#### Miscellaneous Chores
+- **(deps)** update rust:alpine docker digest to 0cfc78e (#243) - (5a187a1) - renovate[bot]
+- **(deps)** update goreleaser/nfpm docker digest to b842811 (#245) - (8878314) - renovate[bot]
+- **(deps)** update tonistiigi/xx docker digest to 923441d (#242) - (01d889e) - renovate[bot]
+- **(deps)** update rust:alpine docker digest to 9ab8f4e (#241) - (1ed82fb) - renovate[bot]
+- **(deps)** update rust:alpine docker digest to 10c5186 (#240) - (3767e85) - renovate[bot]
+
+- - -
+
 ## v1.53.81 - 2024-12-06
 #### Bug Fixes
 - **(deps)** update rust crate clap to v4.5.23 (#239) - (6dddd64) - renovate[bot]
