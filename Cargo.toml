@@ -11,6 +11,6 @@ keywords = [ "life", "game", "kata" ]
 categories = [ "command-line-utilities", "games", "visualization" ]
 
 [dependencies]
-crossterm = "0.28.1"
+crossterm = "0.29.0"
 rand = "0.8.5"
 clap = { version = "4.5.17", features = ["derive", "cargo", "wrap_help", "env" ] }
