@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## v1.53.85 - 2025-05-04
+#### Bug Fixes
+- **(deps)** update rust crate crossterm to 0.29.0 (#257) - (2634fdf) - renovate[bot]
+
+- - -
+
 ## v1.53.84 - 2025-04-28
 #### Bug Fixes
 - **(deps)** update rust crate clap to v4.5.37 (#254) - (4a8e360) - renovate[bot]
